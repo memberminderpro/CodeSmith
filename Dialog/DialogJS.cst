@@ -1,0 +1,156 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Dialog.js";
+		else
+			return SourceTable.Name + "Dialog.js";
+	}
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+string lookupname	  = "";
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+//if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
+//	 strSourceTable = strSourceTable.Substring(2);
+//} 
+%>
+<div id="<%=strSourceTable %>Div" class="table-responsive" style="margin-top: 16px;">
+	
+	
+	$('#Add').on('click', function() {
+		alert("Add");
+		<%=strSourceTable %>Dialog( 0 );		// id=0 means add
+		return false;
+	});
+
+	$('.Edit').on('click', function() {
+		alert("Edit");
+		var id =  $(this).attr( "id" );
+		<%=strSourceTable %>Dialog( id );		// id> means edit
+		return false;
+	});
+
+	$(".Delete").on("click", function(event) {
+		var tr = $(this).closest('tr.row');
+		var id = $(this).attr('id');
+		tr.fadeIn(800, function() {	// turn the select row red
+			tr.addClass('deleterow');
+		});		
+
+	  	if (!window.confirm("Please confirm - this will delete the selected record?")) {
+			tr.fadeIn(800, function() {
+				tr.removeClass('deleterow');
+			});
+			alert("Not deleted!");
+			return false;
+		}
+		$.ajax({ 
+			type: "POST",
+			url: "Action/<%=strSourceTable %>Delete.cfm",
+			data: {
+				<%=strSourceTable %>id: id
+			},
+		  	success: function(data) {  
+				var obj = $.parseJSON(data);
+				if (!obj.SUCCESS) {
+					tr.fadeIn(800, function() {
+						tr.removeClass('deleterow');
+					});
+					alert(obj.ERROR);
+					}
+				else {
+					tr.remove();
+				}
+			}
+		});	
+	});	
+
+function <%=strSourceTable %>Dialog (id) {
+	// alert("id="+id);
+	$.ajax ({ 
+		type: "POST",
+		url: "Dialog/<%=strSourceTable %>Dialog.cfm?r="+Math.random(),
+		cache	: false,
+		async	: true,
+		data: { <%= SourceTable.Columns[0].Name %>: id }
+		}).done ( function( data ) {
+			$("#<%=strSourceTable %>Div").html (data);
+			
+			$("#<%=strSourceTable %>Form").validate({			//Setup validation rules
+			});
+			$( ".Date" ).datepicker({
+				showOn: 'both',
+				buttonImage : '../images/tcal/cal.gif',
+				buttonText : 'Click Calendar',
+				changeMonth: true,
+				changeYear: true,
+				numberOfMonths: 1
+			});
+			$("#<%=strSourceTable %>Div").dialog ({		// Open the Dialog
+				modal: true, 
+				minWidth: 600,
+				Width: 600,
+				title:'<%=strSourceTable %> id='+id,
+				show: {effect: 'fade', speed: 2000},
+				buttons: [
+							{ text: "Cancel", click: function() { $(this).dialog("close") } },
+							
+							{ text: "Save", click: function() { 
+							
+							if ( $("#<%=strSourceTable %>Form").valid() ) { 
+								$(".ui-dialog-buttonpane button:contains('Cancel')").hide();
+								$(".ui-dialog-buttonpane button:contains('Save')").hide();
+								$.post("Action/<%=strSourceTable %>Save.cfm", 
+									$("#<%=strSourceTable %>Form").serialize(), function(data) {
+										var obj = $.parseJSON(data);
+										if (!obj.SUCCESS)
+											alert(obj.ERROR);
+										else {
+											location.reload();
+										}
+								});
+								$(this).dialog("close");
+								}							
+							else { 
+								alert("Validation failed!  One or more required fields were not entered.");
+								} 
+							}},
+
+							{ text: "Delete", click: function() { 
+							  	if (window.confirm("Please confirm - this will delete record.")) {
+									$.post("Action/<%=strSourceTable %>Delete.cfm", 
+										$("#<%=strSourceTable %>Form").serialize(), 	function(data) {
+											var obj = $.parseJSON(data);
+											if (!obj.SUCCESS)
+												alert(obj.ERROR);
+											else {
+												location.reload();
+											}
+									   	});
+									}
+								else
+									alert("Record was NOT deleted");
+								$(this).dialog("close");
+							}}
+						]
+			});  // .dialog
+			if (id == 0)  // If we are adding -- hide the delete button
+				$(".ui-dialog-buttonpane button:contains('Delete')").hide(); 
+		});	 // .ajax
+}	// OpenDiaog		
+

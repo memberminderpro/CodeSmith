@@ -1,0 +1,62 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	public override string GetFileName() {
+		return "Index_Menu.cfm";
+	}
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2003-2018 DACdb, LLC.
+	<%=strSourceTable %>.cfm - Menu
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cfinclude template="../secure.cfm">
+
+<link rel="stylesheet" href="../CSS/Font-Awesome/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" 	href="../jQuery/SideMenu/sidebar-menu.css?"+Math.random() />
+<script type="text/javascript" src="../jQuery/SideMenu/sidebar-menu.js"></script>
+
+<cfset Referrer = GetFileFromPath(CGI.HTTP_URL)>							 <!--- Who called --->
+<cfset FileName = ListDeleteAt(Referrer, ListLen(Referrer, "."), ".")>		 <!--- File Name without EXT  --->
+
+<cfoutput>
+<section style="width: 200px" class="noprint">
+	<ul class="sidebar-menu">
+		<li class="header"><%=strSourceTable %> NAVIGATION</li>
+		<li id="" class="treeview">
+			<a href="<%=strSourceTable %>.cfm"><i class="fa fa-home"></i>	<%=strSourceTable %>	</a>
+		</li>
+		<li id="" class="treeview">
+			<a href="<%=strSourceTable %>.cfm"><i class="fa fa-list"></i>	<%=strSourceTable %>	</a>
+		</li>
+		<li id="" class="treeview">
+			<a href="<%=strSourceTable %>.cfm"><i class="fa fa-list"></i>	<%=strSourceTable %>	</a>
+		</li>
+	</ul>
+</section>
+
+<script>
+$.sidebarMenu($('.sidebar-menu'));
+$("###FileName#").addClass('active');
+</script>
+</cfoutput>

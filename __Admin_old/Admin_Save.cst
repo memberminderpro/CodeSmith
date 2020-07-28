@@ -1,0 +1,57 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Admin_Save.cfm";
+		else
+			return SourceTable.Name + "Admin_Save.cfm";
+	}
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2016 DACdb, LLC.
+	<%=strSourceTable %>Admin_Save.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="No">
+
+<!--- ------------------------------------------
+	Update <%=strSourceTable %> Values
+------------------------------------------- --->
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>" method="init" ArgumentCollection="#FORM#" returnvariable="<%=strSourceTable %>Obj">
+	<cfloop Index="theField" list="#FIELDNAMES#">
+		<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
+	</cfloop>
+</cfinvoke>
+
+<!--- 
+	Validate the data 
+--->
+<cfset errArray = <%=strSourceTable %>Obj.validate( abort=TRUE ) />		<!--- With abort, it will display the errors and stop --->
+
+<!--- 
+	Create or Update the data 
+--->
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>ID">
+<cfif <%=strSourceTable %>ID EQ 0>
+	<cf_Problem Message="Error updating <%=strSourceTable %>">
+</cfif>

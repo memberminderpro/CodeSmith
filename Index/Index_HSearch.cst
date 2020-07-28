@@ -1,0 +1,283 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
+	 strSourceTable = strSourceTable.Substring(2);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2003-2018 DACdb, LLC.
+	<%=strSourceTable %>_Search.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cfinclude template="../cfscript/profile.cfm">
+<cfinclude template="<%=strSourceTable %>s_Query.cfm">
+
+<!-------------------------------------------------------------------------------------------------
+	Setup
+---------------------------------------------------------------------------------------------------->
+<cfset start_tick 	= GetTickCount()>
+<!---
+	Setup the Page variables
+--->
+<cfset pages 	= (Q.RecordCount \ PageSize) + 1 >
+<cfset thispage = (startrow \ PageSize) + 1 >
+<cfset "Client.<%=strSourceTable %>PS" 	= PageSize>
+<!---
+	Get Profile Values
+--->
+<cfset FieldList = GetProfile(AccountID, ClubID, UserID, "<%=strSourceTable %>", "FieldList")>
+
+
+<!-------------------------------------------------------------------------------------------------
+	Internal Functions
+---------------------------------------------------------------------------------------------------->
+<cffunction NAME="Display<%=strSourceTable %>" OUTPUT="Yes">
+	<cfargument name="Q" 			Required="yes" 		type="query">
+	<cfargument name="SortGrp" 		Required="yes" 		type="numeric"	default="0">
+	<cfargument name="ClubID" 		Required="yes" 		type="numeric"	default="0">
+	<cfargument name="ParentID" 	Required="yes" 		type="numeric"	default="0">
+	<cfargument NAME="Level" 		Required="Yes"		type="numeric"	default="0">
+
+	<!--- Local variables --->
+	<cfset var i 		= 0>
+	<cfset var qry 		= 0>
+	<cfset var qryKids	= 0>
+	<cfset var fShow 	= FALSE>
+
+	<cfif level GT 6><cfabort></cfif>
+
+	<cfquery name="qry" dbtype="query">
+		SELECT 		*
+		FROM 		Q
+		WHERE		1 = 1
+		AND 		SortGrp 	= <CFQUERYPARAM value="#ARGUMENTS.SortGrp#" cfsqltype="CF_SQL_INTEGER">
+		AND 		ClubID 		= <CFQUERYPARAM value="#ARGUMENTS.ClubID#" 	cfsqltype="CF_SQL_INTEGER">
+		AND 		ParentID 	= <CFQUERYPARAM value="#ARGUMENTS.ParentID#" cfsqltype="CF_SQL_INTEGER">
+		ORDER BY 	Sequence, SortName
+	</cfquery>
+
+	<cfloop query="qry">
+
+		<cfif (Len(Filter) EQ 0) OR (FindNoCase(Filter, CommitteeName) GT 0 OR  FindNoCase(Filter, RoleKey) GT 0 OR  CommitteeID EQ Filter OR  ClubID EQ Filter)>
+			<cfset Row = row + 1>
+			<cfset fShowAction = TRUE>
+
+			<TR <cfif (currentrow MOD 2) IS 0> class="grayrow" </cfif> style="height: 25px"> 	<!--- With Striping --->
+
+				<td class="TableCellL">#Row#</td>
+				<cfif NOT fExcelWord>
+					<TD class="TableCellC">
+						<div class="noprint">
+							<input type="Checkbox" name="<%=strSourceTable %>IDs" value="#<%=strSourceTable %>ID#" checked class="<%=strSourceTable %>s checkbox">
+						</div>
+					</td>
+				</cfif>
+				<cfif NOT fExcelWord>
+					<td class="TableCellC Action" width="125" style="white-space:nowrap;">
+					<td class="TableCellL" style="white-space:nowrap;">
+						<span style="min-width:25px;">
+							<a href="##" id="#<%=strSourceTable %>ID#" class="StandardLink Edit">	<img src="../images/view.gif" border="0" height="14" title="Edit" alt="Edit"></a>
+						</span>
+						<span style="min-width:25px;">
+							<a href="##" id="#<%=strSourceTable %>ID#" class="StandardLink Delete">	<img src="../images/del.gif"  border="0" height="14" title="Delete" alt="Delete"></a> 
+						</span>
+						<span style="min-width:25px;">
+							<a href="##" id="#<%=strSourceTable %>ID#" class="StandardLink PMail">	<img src="../images/icons/25-Pmail.png"  border="0" height="14" title="PMail" alt="Delete"></a> 
+						</span>
+					</td>
+				</cfif>
+
+				<!--- Moveable columns --->
+				<cfloop index="Column" list="#FieldList#">
+					<cfset Row = Row + 1>
+					<cfswitch expression="#Column#">
+				<% int col = 0; %>
+				<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+					<% col = col + 1; %>
+					<% if( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %> 
+					<% if ( column.Name == "dFlag") continue; %>
+					<% if ( column.Name == "AccountID") continue; %>
+					<% if ( column.Name == "ClubID") continue; %>
+					<% if ( column.Name == "Created_By") continue; %>
+					<% if ( column.Name == "Modified_By") continue; %>
+					<% if (col == 2) { %>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellL">#repeatstring("&nbsp;", level*4)#<a href="##" id="#<%=column.Name %>#" class="StandardLink">#<%= column.Name %>#</a>		</cfcase></TD>
+					<% } else if ( column.NativeType == "smalldatetime" || column.NativeType == "datetime") {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellC">#DateFormat(<%= column.Name %>, SESSION.DateFmt)#		</cfcase></TD>
+					<% } else if ( CFType(column) == "date") {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellC">#DateFormat(<%= column.Name %>, SESSION.DateFmt)#		</cfcase></TD>
+					<% } else if  ( column.NativeType == "decimal") {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellR">#DeciamlFormat(<%= column.Name %>)#		</cfcase></TD>
+					<% } else if ( column.NativeType == "money") {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellR">#DollarFormat(<%= column.Name %>)#		</cfcase></TD>
+					<% } else if ( CFType(column) == "numeric") {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellR">#NumberFormat(<%= column.Name %>,'9,999')#		</cfcase></TD>
+					<% } else if ( column.Name.Substring(0,2) == "Is" && column.Size == 1) {%>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellC">
+							<cfswitch expression ="#<%= column.Name %>#">
+								<cfcase value="N"> No </cfcase>
+								<cfcase value="Y"> Yes </cfcase>
+							</cfswitch>
+							</TD>
+						</cfcase>
+				
+					<% } else if ( column.Name == "Modified_Tmstmp") {%>
+						<cfcase value="Modified">	<TD class="TableCellC small">#Modified_By#<BR>#DateFormat(Modified_tmstmp,SESSION.DateFmt)# #TimeFormat(Modified_Tmstmp,"hh:mm tt")#<br>#Modified_By#			</cfcase></TD>	
+					<% } else if ( column.Name == "Created_Tmstmp" ) {%>
+						<cfcase value="Created">	<TD class="TableCellC small">#Created_By#<BR>#DateFormat(Created_tmstmp,SESSION.DateFmt)# #TimeFormat(Created_Tmstmp,"hh:mm tt")#<br>#Created_By#		</cfcase></TD>	
+					<% } else { %>
+						<cfcase value="<%= column.Name %>">	<TD class="TableCellL">#<%= column.Name %>#		</cfcase></TD>
+					<% } %>
+				<% } %>
+					</cfswitch>
+				</cfloop>
+			</TR>
+		
+		</cfif>
+		<cfquery name="qryKids" dbtype="query">
+			SELECT  *
+			FROM 	Q
+			WHERE 	ParentID 	= <CFQUERYPARAM value="#qry.CommitteeID#" cfsqltype="CF_SQL_INTEGER">
+			ORDER BY 	Sequence, SortName
+		</cfquery>
+
+		<cfif qryKids.RecordCount GT 0>	<!--- This child has kids too!, make the recursive call --->
+			<cfset fshow = DisplayCommittees(Q,  SortGrp, ClubID, qry.CommitteeID, ARGUMENTS.level + 1)>
+		</cfif>
+
+	</cfloop>
+	
+	<cfreturn fShow>
+</cffunction>
+
+
+<div class="tabletitle">
+<%=strSourceTable %> Listing
+</div>
+
+<div class="tablewrapper">
+<table border="0" cellpadding="0" cellspacing="0" class="tablesorter" width="100%">
+	<THEAD>
+		<TR>
+			<TH width="20" class="TableHeadC" data-sorter="false">#</TH>
+			<cfif NOT fExcelWord>
+				<TH width="2%" class="TableHeadC" data-sorter="false">
+					<div class="noprint">
+						<input id="CheckAll" type="Checkbox" name="eChkCtrl">
+					</div>
+				</TH>
+				<TH width="4%" class="TableHeadC" data-sorter="false">Action</TH>
+			</cfif>
+
+			<!--- Moveable columns --->
+			<cfloop index="Column" list="#FieldList#">
+				<cfswitch expression="#Column#">
+			<% foreach (ColumnSchema column in this.SourceTable.Columns) { %>
+				<% if( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   <%-- Don't generate Identity field --%>
+				<% if ( column.Name == "dFlag") continue; %>
+				<% if ( column.Name == "AccountID") continue; %>
+				<% if ( column.Name == "ClubID") continue; %>
+				<% if ( column.Name == "Modified_By") continue; %>
+				<% if ( column.Name == "Created_By") continue; %>
+				<% if ( column.NativeType == "smalldatetime" || column.NativeType == "datetime") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if ( CFType(column) == "date") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if  ( column.NativeType == "decimal") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if ( column.NativeType == "money") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if ( CFType(column) == "numeric") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if ( column.Name.Substring(0,2) == "Is" && column.Size == 1) {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } else if ( column.Name == "Modified_Tmstmp") {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC">Modified		</cfcase></TH>	
+				<% } else if ( column.Name == "Created_Tmstmp" ) {%>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadC">Created		</cfcase></TH>	
+				<% } else { %>
+					<cfcase value="<%= column.Name %>">	<TH width="10%" class="TableHeadL"><%= SplitCamelCase(column.Name) %>		</cfcase></TH>	
+				<% } %>
+			<% } %>
+				</cfswitch>
+			</cfloop>
+		</TR>
+	</THEAD>
+	<TBODY>
+	<cfset ATotal = Display<%=strSourceTable %> (Q, SortGrp, ClubID, 0, 0)>
+
+</TBODY>
+</table>
+</div>
+<cfif Q.Recordcount EQ 0><span class="text">No Records Found</span></cfif>
+
+<cfset elapsed = GetTickCount() - start_tick>
+
+<cfif NOT fExcelWord>
+	<cfset minrange = thispage - 5 >
+	<cfset maxrange = thispage + 5 >
+	<cfoutput>
+    <div class="noprint">
+	<table border="0" cellspacing="0" cellpadding="0" width="100%">
+		<TR>
+			<th class="PageControlCellL" >
+				<cfif thispage GT 1 >
+					<a href="##" class="WhiteLink" id="prev">[Prev]</a>
+				</cfif>
+				<cfif Evaluate(ceiling(Q.RecordCount / PageSize)) GT 1>
+					<cfloop index="I" from="1" to="#Evaluate(ceiling(Q.RecordCount / PageSize))#" >
+						<cfif Evaluate(ceiling(StartRow / PageSize)) EQ #I#>
+							<strong style="color:##FFFF66;">#I#</strong>
+						<cfelse>
+							<cfif i GTE minrange and i LTE maxrange >
+								<a href="##" class="WhiteLink">#I#</a>
+							</cfif>
+						</cfif>
+					</cfloop>	
+				</cfif>	
+				<cfif pages NEQ thispage >
+					<a href="##" class="WhiteLink" id="next">[Next]</a>
+				</cfif> &nbsp;&nbsp;
+				<select name="PageSize" class="TxtIn ChgRows">
+					<option value="15"  <cfif PageSize EQ 15>  selected </cfif> >15</option>
+					<option value="25"  <cfif PageSize EQ 25>  selected </cfif> >25</option>
+					<option value="100" <cfif PageSize EQ 100> selected </cfif> >100</option>
+					<option value="250" <cfif PageSize EQ 250> selected </cfif> >250</option>
+					<option value="500" <cfif PageSize EQ 500> selected </cfif> >500</option>
+					<option value="99999" <cfif PageSize EQ 99999> selected </cfif> >All Rows</option>
+				</select> Rows
+			</th>
+			<th class="PageControlCellC"><cfif SESSION.RoleID EQ 9>Elapsed Time: <cfoutput>#NumberFormat(elapsed,"9,999")# ms</cfoutput></cfif></th>
+			<th class="PageControlCellR">
+				<cfset thisendrow = (startrow + PageSize) - 1 >
+				<cfset maxrange = thispage + 5 >
+				<cfset minrange = thispage - 5 >
+					[#Q.RecordCount# Results] - [Showing #startrow# - <cfif thisendrow gte Q.RecordCount>#Q.RecordCount#<cfelse>#thisendrow#</cfif>] - [Page #thispage#]
+			</th>
+		</TR>
+	</table>
+    </div>
+	</cfoutput>
+</cfif> 

@@ -1,0 +1,76 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+public override string GetFileName() {
+	return "Del.cfm";
+}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	<%= strSourceTable %> Del.cfm
+---------------------------------------------------------------------------------------------- --->
+
+<cfset N = 0>
+<div class="tablewrapper">
+<div class="tabletitle"><%= strSourceTable %></div>
+<table border="0" cellpadding="0" cellspacing="0" class="tablesorter hasStickyHeaders" width="100%">
+	<THEAD>
+	<TR>
+		<TH class="TableHeadC" width="15" data-sorter="false"><!--- <input type="Checkbox" name="eChkCtrl" Onclick="eCBChg(<cfoutput>#Q.Recordcount#</cfoutput>)"> ---></TH>
+		<cfinclude template="TH.cfm">
+	</TR>
+	</THEAD>
+	<cfif Q.Recordcount GT 0>
+		<TBODY>
+		<cfoutput query="Q">
+			<cfset N = N + 1>
+			<tr id="Q_#Q.<%= SourceTable.Columns[0].Name %>#">
+				<input type="Hidden"	name="LineItem"				value="#N#">
+				<input type="Hidden"	name="<%= SourceTable.Columns[0].Name %>_#N#"	value="#Q.<%= SourceTable.Columns[0].Name %>#">
+				
+				<TD class="TableCellC"><input type="Checkbox" name="Chk_#N#" value="Y"></TD>
+				<cfinclude template="TD.cfm">
+			</tr>
+		</cfoutput>
+		</TBODY>
+	<cfelse>
+		<TR><TD colspan="<%= SourceTable.Columns.Count-4%>"><span class="Text">No record(s) Found.</span></TD></TR>
+	</cfif>
+</table>
+</div>

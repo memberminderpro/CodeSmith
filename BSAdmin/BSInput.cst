@@ -1,0 +1,187 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Dialog.cfc";
+		else
+			return SourceTable.Name + "DAO.cfc";
+	}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	<%= strSourceTable %> Edit.cfm
+---------------------------------------------------------------------------------------------- --->
+
+<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+
+<div class="bs-body">
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
+<% } else { %>
+	<%  switch (column.Name.ToLower() )  %>
+	<% { %>
+		<% case "positionsort":	%>
+		<% case "sequence":	%>
+			<% break; %>
+		<% case "modified_tmstmp":	%>
+			<% break; %>
+		<% case "modified_by":		%>
+			<% break; %>
+		<% case "created_tmstmp":	%>
+			<% break; %>
+		<% case "created_by":		%>
+			<% break; %>
+		<% case "accountid":		%>
+			<% break; %>
+		<% case "clubid":		%>
+			<% break; %>
+		<% case "userid":		%>
+			<% break; %>
+		<% case "orgyear":		%>
+			<% break; %>
+		<% default:%>
+			<% string strColType = column.NativeType;	%>
+			<% switch (strColType)	%>
+				<% {	%>
+					<% case "bit":		%>
+					<% case "bigint":	%>
+					<% case "int":		%>
+					<% case "numeric":	%>
+					<% case "smallint":	%>
+					<% case "tinyint":	%>
+					<% if ( column.Name.ToLower() != "positionsort" && column.Name.ToLower() != "sequence") { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtInC"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+					<% } %>
+						<% break; %>
+					<% case "money":	%>
+					<% case "decimal":		%>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+						<% break; %>
+					<% case "float":	%>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+						<% break; %>
+					<% case "char":		%>
+					<% if ( column.Size == 1 && column.Name.Substring(0, 2) == "Is") { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="checkbox"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	<cfif <%= strSourceTable %>.<%= column.Name %> EQ "Y"> checked </cfif>  class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+					<% } else { %>
+						<% if ( column.Size == 1) { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+					<% } else { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+							<% } %>
+						<% } %>
+						<% break; %>
+					<% case "nvarchar":	%>
+					<% case "varchar":	%>
+						<% if ( column.Size < 1) { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<textarea	name="<%= column.Name %>" rows="2"	cols="40"	class="TxtIn" placeholder="<%= SplitCamelCase(column.Name)%>" id="<%= column.Name %>">#Trim(<%= strSourceTable %>.<%= column.Name %>)#</textarea>
+		</div>
+	</div>
+						<% } else { %>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+						<% } %>
+						<% break; %>
+					<% case "xml":		%>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<textarea	name="<%= column.Name %>" rows="2"	cols="40"	class="TxtIn" placeholder="<%= SplitCamelCase(column.Name)%>" id="<%= column.Name %>">#Trim(<%= strSourceTable %>.<%= column.Name %>)#</textarea>
+		</div>
+	</div>
+						<% break; %>
+					<% case "date":		%>
+					<% case "datetime":	%>
+					<% case "smalldatetime":	%>
+	<div class="form-group row">
+		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
+		<div class="col-sm-5">
+			<input type="Text"	name="<%= column.Name %>"	value="#DateFormat(<%= strSourceTable %>.<%= column.Name %>,'mm/dd/yyyy')#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+		</div>
+	</div>
+						<% break; %>
+					<% default:	%>
+						<% break; %>
+				<% } %>
+			<% break; %>
+		<% } %>
+	<% } %>
+<% } %>
+</div>
+

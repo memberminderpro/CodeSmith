@@ -1,0 +1,512 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2003-2020 DACdb, LLC.
+	<%=strSourceTable %>s.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfsetting showdebugoutput="no">
+<cfinclude template="/secure.cfm">
+<cfinclude template="/cfscript/profile.cfm">
+
+
+<cftry>
+	<cfparam name="AccountID" 				default="#SESSION.AccountID#"					type="numeric">
+	<cfparam name="ClubID" 					default="#SESSION.ClubID#"						type="numeric">
+	<cfparam name="UserID" 					default="#SESSION.UserID#"						type="numeric">
+
+	<cfparam name="OrgYear" 				default="#SESSION.OrgYear#"						type="string">
+
+	<cfparam name="TabNo" 					default="0"										type="numeric">
+	<cfparam name="strMsg"					default=""										type="string">
+
+	<cfparam name="Filter" 					default=""										type="string">
+	<cfparam name="StartRow" 				default="1"										type="numeric">
+	<cfparam name="PageSize" 				default="250"									type="numeric">
+	<cfcatch>
+		Contact Support.<cfabort>
+	</cfcatch>
+</cftry>
+
+<!--------------------------------------------------------------------------------------------------
+	Setup
+---------------------------------------------------------------------------------------------------->
+<cfset start_tick	= GetTickCount()>
+<cfset fDebug = FALSE>
+
+<!-------------------------------------------------------------------------------------------------
+	Actions - Save <%=strSourceTable %> data
+---------------------------------------------------------------------------------------------------->
+<cfif structKeyExists(Form, "Delete")>
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" Method="Read" 		  <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="DeleteLogical" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>ID">
+	<cflocation url="Index.cfm" addtoken="No">
+</cfif>
+
+<cfif structKeyExists(Form, "Submit") AND Submit EQ "Save">
+
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>" method="init" argumentcollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj">
+		<cfloop Index="theField" list="#FIELDNAMES#">
+			<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
+		</cfloop>
+	</cfinvoke>
+
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>ID">
+	<cfif <%=strSourceTable %>ID EQ 0>
+		<cfset strMsg = "<%=strSourceTable %> SAVE error">
+	<cfelse>
+		<cfset strMsg = "Save Hit">
+	</cfif>
+</cfif>
+
+<!--------------------------------------------------------------------------------------------------
+	Security
+---------------------------------------------------------------------------------------------------->
+<cfset fEditEnabled 	= TRUE>
+<cfset fDeleteEnabled 	= FALSE>
+
+<!-- -----------------------------------------------------------------------------------------------
+	Query DB
+--------------------------------------------------------------------------------------------------->
+<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+-- or --
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="View" <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" returnvariable="Q">
+-- or --
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Get<%=strSourceTable %>Name" <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" returnvariable="<%=strSourceTable %>Name">
+
+<!--------------------------------------------------------------------------------------------------
+	Display Page
+---------------------------------------------------------------------------------------------------->
+<cfset ModuleInc = "Validate,ToolTip,TableSort,TableSortWidgets,HighCharts,CKEditor,Upload,hasSubMenu">
+<cf_StdHeader Menu="/XXX/Index_Menu.cfm" Legacy="TRUE" ClubID="#ClubID#" Include="#ModuleInc#">
+	<!--- Add custom page styles here. --->
+</cf_StdHeader>
+
+<div class="content-wrapper">
+
+	<cfoutput>
+	<form id="form" name="form" action="#CGI.SCRIPT_NAME#"  method="post"  enctype="multipart/form-data" onSubmit="return validate_form(this);" >
+		<input type="hidden" 	name="AccountID" 				value="#AccountID#" 					id="AccountID">
+		<input type="hidden" 	name="ClubID" 					value="#ClubID#" 						id="ClubID">
+		<input type="hidden" 	name="UserID" 					value="#UserID#" 						id="UserID">
+
+		<input type="hidden"	name="RoleID" 					value="#SESSION.RoleID#"				id="RoleID">
+		<input type="hidden" 	name="TabNo" 					value="#TabNo#" 						id="TabNo">
+
+		<input type="hidden" 	name="Type"						value="UserIDs"							id="Type">
+
+		<input type="hidden"	name="StartRow" 				value="#StartRow#"						id="Startrow">
+		<input type="hidden" 	name="PageSize" 				value="#PageSize#"						id="PageSize">
+
+		<input 	type="hidden" 	name="AccountLabel"				value="#SESSION.AccountLabel#"			id="Accountlabel">
+		<input 	type="hidden" 	name="ClubLabel" 				value="#SESSION.ClubLabel#"				id="Clublabel">
+
+		<input type="hidden" 	name="Submit" 					value="Save"							id="Submit">
+
+		<section class="content noprint" style="padding: 8px 0 8px 0;">
+			<div class="row">
+				<div class="col-md-8">
+					<h1 class="h1"><strong>Admin:  <cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
+				</div>
+				<div class="col-md-4 noprint">
+					<button type="button" class="btn btn-basic	 	pull-right noprint" id="config" Title="Configure" 		Alt="Configure">		<i class="fas fa-cog fa-lg"></i></button>
+					<button type="button" class="btn btn-success 	pull-right noprint" id="pmail" 	Title="PMail" 			Alt="PMail">			<i class="fas fa-envelope-square fa-lg"></i></button>
+					<button type="button" class="btn btn-success 	pull-right noprint" id="pmails" Title="PMail Selected"	Alt="PMail Selected">	<i class="fas fa-envelope-open-text fa-lg"></i></button>
+					<button type="button" class="btn btn-secondary 	pull-right noprint" id="print" 	Title="Print" 			Alt="Print">			<i class="fas fa-print fa-lg"></i>		</button>
+					<button type="button" class="btn btn-info  		pull-right noprint" id="excel" 	Title="To Excel" 		Alt="To Excel">			<i class="fas fa-file-excel fa-lg"></i></button>
+					<button type="button" class="btn btn-info  		pull-right noprint" id="word" 	Title="To Word" 		Alt="To Word">			<i class="fas fa-file-word fa-lg"></i></button>
+					<button type="button" class="btn btn-info  		pull-right noprint" id="pdf" 	Title="To PDF" 			Alt="To PDF">			<i class="fas fa-file-pdf fa-lg"></i></button>
+
+					<cfif SESSION.RoleID GTE 8>
+						<button type="button" class="btn btn-secondary 	pull-right noprint" id="switchDistrict"><i class="fas fa-exchange fa-lg"></i>	</button>
+					</cfif>
+					<div class="input-group pull-right col-md-4">   <!--- Needs BS4 --->
+						<input id="headersearch" class="form-control py-2 border-right-0 border" type="search" name="Filter" value="" placeholder="search..">
+						<span class="input-group-append">
+							<div class="input-group-text bg-transparent"><i class="fa fa-search"></i></div>
+						</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="content content-buttons noprint" style="border-bottom: 1px solid ##dcdcdc; padding: 8px 0 8px 0; margin-bottom: 12px;">
+			<div class="row">
+				<div class="col-md-8 col-xs-12">
+					Some descrption here.
+					<cfif Len(strMsg) GT 0>
+						<BR><span class="alert">#strMsg#</span>
+					</cfif>
+				</div>	<!--- /col-md-8 col-xs-12 --->
+				<div class="col-md-4 col-xs-12 text-right">
+					<div class="btn-group noprint">
+						<input id="Add" 	type="submit"	name="Add"		value="Add" 	class="btn btn-primary noprint">
+						<input id="Save"	type="submit" 	name="Save"		value="Save"	class="btn btn-danger noprint">
+					</div>	<!--- /btn-group --->
+				</div>	<!--- /col-md-4 col-xs-12 text-right --->
+
+				<!---	Validation Error --->
+				<div align="center" class="error" style="display:none; margin-top: 10px; margin-bottom: 10px">
+					<img src="/images/exclaim.gif" alt="Warning!" style="margin: 0px 5px 0px 10px;" />
+					<span></span><br clear="all"/>
+				</div>	<!--- /validation --->
+			</div>	<!--- /row --->
+		</section>
+
+		<!-- Main content -->
+		<section class="content">
+			<div class="row">
+				<div class="col-md-12">
+
+
+<div id="DataContent" align="center">
+	<img src="/images/loading2.gif">
+</div>
+
+				</div>	<!--- /col-md-12 --->
+			</div>	<!--- /row --->
+		</section>	<!--- /content --->
+	</form>
+	</cfoutput>
+</div>	<!-- /.content-wrapper -->
+
+<!-------------------------------------------------------------------------------------------------
+	Popup DIVs
+--------------------------------------------------------------------------------------------------->
+<div id="hidecontain">
+	<div id="programwrap" title="Setup">
+	</div>	<!--- /programwrap --->
+	<div id="<%=strSourceTable %>Div" title="<%=strSourceTable %>">
+	</div>
+</div>	<!--- /hidecontain --->
+
+<cf_StdFooter Include="#ModuleInc#">
+<!-------------------------------------------------------------------------------------------------
+	Local Javascript Functions
+---------------------------------------------------------------------------------------------------->
+<script type="text/javascript" src="js/index.js?<cfoutput>#Rand()#</cfoutput>" type="text/javascript"></script>
+<script type="text/javascript">
+var today = new Date();
+var pagenum = 1;
+var setTab = parseInt( $("#TabNo").val() );
+
+$(document).ready(function(){
+//alert("ready");
+
+	$.ajaxSetup ({
+		cache: false
+	});
+
+	InitializePage();
+});
+
+function validate_form(f) {
+	if ( $("#form").valid() ) {
+		$('#Bsel1 option').prop('selected', true);
+		return true;
+	}
+	return false;
+}
+
+function InitializePage() {
+	// alert("InitializePage");
+
+	$("#form").validate({
+	})
+
+	$( ".Date" ).datepicker({
+		showOn: 'both',
+		buttonImage : 	'../images/tcal/cal.gif',
+		buttonText : 	'Click Calendar',
+		numberOfMonths: 3
+	});
+
+	$('#Save').on('click', function() {
+		// add validation here
+		$('#Submit').val( "Save");
+		$('#form').submit();
+	});
+
+	$('#Add').on('click', function() {		
+		// alert("Add");
+		<%=strSourceTable %>Dialog(0);
+		window.location = '<%=strSourceTable %>Admin.cfm?Action=A&<%=strSourceTable %>ID=0';
+		return false;
+	});
+
+	/*
+	$('#tabs').tabs({	// if you need to do somethign on tab activation - otherwise can delete
+		activate: function(event, ui) {
+			var tabNumber = $('#tabs').tabs('option', 'active');							//alert(tabNumber);
+			var tabName   = $("#tabs ul>li a").eq (tabNumber).attr("href").substring(1);	//alert(tabName);
+			$("#TabNo").val( tabNumber );
+			$("#Startrow").val( 1 );
+			}
+	});
+	$("#tabs").tabs({ active: setTab });
+	*/
+
+	RefreshTable( setTab );
+}
+
+function RefreshTable(t) {
+	var f = $("#form").serialize();		// save this before replacing with loading imaage below
+	// alert("RefreshTable");
+	$("#DataContent").html( '<div align="center"><img src="../images/loading2.gif"></div>' );
+	$.ajax({
+		type: "POST",
+		url: "Index_Search.cfm?"+Math.random(),
+		data: f,
+		success: function(data) {
+			$("#DataContent").html(data);
+			ReBind( t );
+		}
+	});
+}
+
+function ReBind(t) {
+	//alert("tab="+t);
+	switch(t) {						// Turn ON/OFF Buttons for selected Tab
+		case  0:
+			break;
+		case  1:
+			break;
+		case  2:
+			break;
+	}
+
+	$(".tablesorter").tablesorter({
+		debug: false,
+		theme: 'custom',
+		widgets: ['zebra','saveSort','cssStickyHeaders'],
+		widgetOptions : {
+			saveSort: true,
+			zebra : [ "even", "odd" ],
+			stickyHeaders : 'tablesorter-stickyHeader',
+			cssStickyHeaders_addCaption    : true,
+			cssStickyHeaders_attachTo      : null,
+			cssStickyHeaders_filteredToTop : true,
+			cssStickyHeaders_offset        : 0
+		}
+	});
+
+	$(".tablesorter").tablesorter({
+		debug:false,
+		theme: 'custom',
+		widgets: ['zebra'],
+		widgetOptions : {
+			zebra : [ "even", "odd" ]
+		}
+	});
+
+	var trs = $('.tablesorter tr.delrow');	// must remove tablesorter class on deleted rows to see yellow background
+	trs.removeClass('odd');
+	trs.removeClass('even');
+
+	$( ".CheckAll" ).on("click", function() {
+		$(this).closest('table').find('td input:checkbox').prop('checked', this.checked);
+	});
+
+	$('.Checkit').on('click', function() {
+		var tr = $(this).closest('tr');
+		if ($(this).attr("id") == "On"){
+			tr.find("input").prop('checked', true);
+		} else{
+			tr.find("input").prop('checked', false);
+		}
+		return false;
+	});
+
+	$('.Edit').on('click', function() {
+		var id =  $(this).attr( "id" );
+		// alert("Edit="+id);
+		//  Go to a page like IndexAdmin.cfm or
+		//window.location = "<%=strSourceTable %>Admin.cfm?<%=strSourceTable %>ID="+id;
+		<!--- or popup a dialog --->
+		<%=strSourceTable %>Dialog(id);
+		return false;
+	});
+
+	$('.Delete').on('click', function() {
+		var id = $(this).attr( "id" );
+		// alert("Delete="+id);
+		var tr = $(this).closest('tr');
+		var trclass = tr.attr('class');		// Save class for later
+		tr.removeClass();					// Must remove tablesorter class to see red background of deleterow
+		tr.fadeIn(800, function() {	// turn the select row red
+			tr.addClass('deleterow');
+		});
+		setTimeout(function() {
+			if (!window.confirm("Please confirm - this will delete the selected record?")) {
+				tr.removeClass('deleterow');
+				tr.addClass(trclass);
+				alert("Not deleted!");
+				return false;
+			}
+			$.ajax({
+				type: "POST",
+				url: "Action/<%=strSourceTable %>Delete.cfm?"+Math.random(),
+				data: {
+					<%=strSourceTable %>ID: id
+				},
+				success: function(data) {
+					tr.removeClass('deleterow');
+					tr.addClass('delrow');
+					tr.remove();
+					window.location = window.location;
+				}
+			}, 100);
+		});
+	});
+
+	$(".ChgRows").on("change", function(){
+		var ps = $(this).val( );
+		$("#Startrow").val(1);		// Set start back to page 1
+		$("#PageSize").val( ps );	// Update the PageSize
+		window.scrollTo(0,0);		// scroll window to top (might be way down) and to accommodate less rows
+		RefreshTable();
+		return false;
+	});
+
+	$(".WhiteLink").on("click", function(){
+		if ( $(this).text() != "[Prev]" && $(this).text() != "[Next]"){
+			$("#Startrow").val( $(this).text() );
+			pagenum = parseFloat($(this).text());
+		}
+		if ( $(this).text() == "[Prev]") {
+			pagenum = parseFloat(pagenum) - 1;
+			$("#Startrow").val(pagenum);
+		}
+		if ( $(this).text() == "[Next]") {
+			pagenum = parseFloat(pagenum) + 1;
+			$("#Startrow").val(pagenum);
+		}
+		if ( pagenum == 1) {
+			$('#prev').hide();
+		}
+		RefreshTable();
+		return false;
+	});
+}
+
+function setTab(id) {
+	// alert("setTab="+id);
+	$("#tabs").tabs("option", "selected", id);
+	return false;
+};
+
+function refreshParent() {
+	if (opener != null)
+		opener.location.reload();
+	else
+		$('#form').submit();
+}
+
+function <%=strSourceTable %>Dialog (id, action) {
+	alert("IndexDialog="+id);
+	$.ajax({
+		type: "POST",
+		url: 'Dialog/<%=strSourceTable %>Dialog.cfm?'+Math.random(),
+		data: {
+			Account:	$("#AccountID").val(),
+			ClubID: 	$("#ClubID").val(),
+			<%=strSourceTable %>ID:	id
+		}
+		}).done( function( data ) {
+			$("#<%=strSourceTable %>Div").html( data );
+
+			$("#<%=strSourceTable %>Form").validate({			//Setup validation rules
+			});
+
+			$( ".Date" ).datepicker({
+				showOn: 'both',
+				buttonImage : '../images/tcal/cal.gif',
+				buttonText : 'Click Calendar',
+				changeMonth: true,
+				changeYear: true,
+				numberOfMonths: 3
+			});
+
+			$( "#<%=strSourceTable %>Div" ).dialog({			// Show the Dialog
+					title: '<%=strSourceTable %> id='+id,
+					width: 800,
+					show: {effect: 'fade', speed: 2000} ,
+					modal: true,
+
+					buttons:
+						[
+							{ text: "Cancel", click: function() { $(this).dialog("close") } },
+							
+							{ text: "Delete", click: function() { 
+								if (window.confirm("Please confirm - this will delete Item?"))
+									{
+									$.post("Action/<%=strSourceTable %>Delete.cfm",
+										$("#<%=strSourceTable %>Form").serialize(),
+										function(data) {
+											var obj = $.parseJSON(data);
+											if (!obj.SUCCESS)
+												alert(obj.ERROR);
+											else {
+												RefreshTable();
+											}
+										});
+									}
+								else {
+									alert("<%=strSourceTable %> was NOT deleted");
+									$(this).dialog("close");
+								}
+							}},
+
+							{ text: "Save", click: function() {
+								if ( $("#<%=strSourceTable %>Form").valid() ) {
+									$.post("Action/<%=strSourceTable %>Save.cfm",
+										$("#<%=strSourceTable %>Form").serialize(),
+										function(data) {
+											var obj = $.parseJSON(data);
+											if (!obj.SUCCESS)
+												alert(obj.ERROR);
+											else {
+												RefreshTable();
+											}
+										});
+									$(this).dialog("close");
+									}
+								else {
+									alert("Validation failed!  One or more required fields were not entered.");
+									}
+							}}
+						]
+			});  // .dialog
+			if (id == 0 || action == 'E')  // If we are adding - or editing - hide the delete button
+				$(".ui-dialog-buttonpane button:contains('Delete')").hide();
+			if (action == 'D')  // If we are deleting - hide the save button
+				$(".ui-dialog-buttonpane button:contains('Save')").hide();
+	});		// ajax
+}	// OpenDialog
+</script>
+</cf_StdFooter>
+

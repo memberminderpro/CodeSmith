@@ -1,0 +1,65 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+public override string GetFileName() {
+	return "Sequence.cfm";
+}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!--------------------------------------------------------------------------------------
+	Copyright(c) 2003-2018 DACdb, LLC.
+	<%= strSourceTable %>.cfm -  Sequence 
+
+	Modifications:
+		<%= DateTime.Now.ToShortDateString() %> - Created
+----------------------------------------------------------------------------------- --->
+<cfsetting showdebugoutput="No">
+<cfsetting enablecfoutputonly="true">
+
+<cfparam name="Q" 			default="0"						 	type="String">
+
+<cfset N = 0>
+<cfloop index="ID" list="#Q#">
+	<cfset N = N + 1>
+	<cfinvoke component="#APPLICATION.DIR#cfc\<%= strSourceTable %>DAO" method="UpdateSequence" returnvariable="RC">
+		<cfinvokeargument name="<%= SourceTable.Columns[0].Name %>"			Value="#ID#">
+		<cfinvokeargument name="Sequence"					Value="#N#">
+	</cfinvoke>
+</cfloop>
+<CF_XLog Table="<%= strSourceTable %>" type="U" Value="<%= strSourceTable %>" Desc="Resequenced">

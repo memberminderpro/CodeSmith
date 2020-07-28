@@ -1,0 +1,127 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+public override string GetFileName() {
+	return "TD.cfm";
+}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	<%= strSourceTable %> TD.cfm
+---------------------------------------------------------------------------------------------- --->
+
+<cfoutput>
+<% int n=0; %>
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<% n=n+1; %>
+<%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
+	<TD class="TableCellC" valign="top"><font class="small">#Q.<%= column.Name %>#</font></TD>
+<% } else { %>
+	<%  switch (column.Name.ToLower() )  %>
+	<% { %>
+		<% case "positionsort":	%>
+		<% case "sequence":	%>
+			<% break; %>
+		<% case "isactive":	%>
+	<TD class="TableCellC"><cfif IsActive EQ "Y">	<IMG src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
+			<% break; %>
+	<% case "modified_tmstmp":	%>
+	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Modified_By#<BR><CF_DisplayDate Date="#Q.Modified_Tmstmp#"></TD>
+			<% break; %>
+		<% case "modified_by":		%>
+			<% break; %>
+		<% case "created_tmstmp":	%>
+	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Created_By# <BR><CF_DisplayDate Date="#Q.Created_Tmstmp#"></TD>
+			<% break; %>
+		<% case "created_by":		%>
+			<% break; %>
+		<% case "accountid":		%>
+			<% break; %>
+		<% case "orgyear":		%>
+			<% break; %>
+		<% default:%>
+			<% string strColType = column.NativeType;	%>
+			<% switch (strColType)	%>
+				<% {	%>
+					<% case "bit":		%>
+					<% case "bigint":	%>
+					<% case "int":		%>
+					<% case "numeric":	%>
+					<% case "smallint":	%>
+					<% case "tinyint":	%>
+	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+				<% break; %>
+					<% case "decimal":	%>
+					<% case "float":	%>
+					<% case "money":	%>
+	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+				<% break; %>
+					<% case "char":		%>
+	<% if ( column.Name.Substring(0, 2) == "Is" ) { %>
+	<TD class="TableCellC"><cfif <%= column.Name %> EQ "Y">		<img src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
+				<% } else { %>
+		<% if ( column.Size == 1 ) { %>
+	<TD class="TableCellC">
+		<cfswitch expression="#Q.<%= column.Name %>#">
+			<cfcase value="N">No	</cfcase>
+			<cfcase value="Y">Yes	</cfcase>
+			<cfdefaultcase>#Q.<%= column.Name %>#</cfdefaultcase>
+		</cfswitch>
+	</TD>
+					<% } else { %>
+	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+					<% } %>
+				<% } %>
+				<% break; %>
+					<% case "nvarchar":	%>
+					<% case "varchar":	%>
+					<% case "xml":		%>
+					<% case "date":		%>
+					<% case "datetime":	%>
+					<% case "smalldatetime":	%>
+	<TD class="TableCellL"<% if (n==2) { %> style="white-space:nowrap;"<% }%>>#Q.<%= column.Name %>#</TD>
+						<% break; %>
+					<% default:	%>
+						<% break; %>
+				<% } %>
+			<% break; %>
+		<% } %>
+	<% } %>
+<% } %>
+</cfoutput>

@@ -1,0 +1,357 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2016 DACdb, LLC.
+	<%=strSourceTable %>Admin.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cfinclude template="../cfscript/profile.cfm">
+
+<cftry>
+	<cfparam name="Action" 					default="E"												type="string">
+	<cfparam name="<%= SourceTable.Columns[0].Name %>"				default="0"												type="numeric">
+
+	<cfparam name="AccountID" 				default="#SESSION.AccountID#"							type="numeric">
+	<cfparam name="ClubID" 					default="#SESSION.ClubID#"								type="numeric">
+	<cfparam name="UserID" 					default="#SESSION.UserID#"								type="numeric">
+	<cfparam name="OrgYear" 				default="#SESSION.OrgYear#"								type="string">
+
+	<cfparam name="Tab" 					default="0"												type="numeric">
+	<cfparam name="setTab" 					default=""												type="string">
+
+	<cfcatch>
+		Contact Support.<cfabort>
+	</cfcatch>
+</cftry>
+
+<!-------------------------------------------------------------------------------------------------
+	Setup
+---------------------------------------------------------------------------------------------------->
+<cfset start_tick 	= GetTickCount()>
+
+<!-------------------------------------------------------------------------------------------------
+	ACTION Routines
+---------------------------------------------------------------------------------------------------->
+<cfif structKeyExists(Form, "Submit") AND Submit EQ "Save">
+	<cfinclude template="<%=strSourceTable %>_Save.cfm">
+	<cflocation url="<%=strSourceTable %>.cfm?ClubID=#ClubID#" addtoken="No">
+</cfif>
+<cfif structKeyExists(Form, "Submit") AND Submit EQ "Clone">
+	<cfinclude template="<%=strSourceTable %>_Save.cfm">
+	<cfinclude template="<%=strSourceTable %>_Clone.cfm">
+	<cflocation url="<%=strSourceTable %>.cfm?ClubID=#ClubID#" addtoken="No">
+</cfif>
+
+<!-------------------------------------------------------------------------------------------------
+	Query
+---------------------------------------------------------------------------------------------------->
+<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+
+<!-------------------------------------------------------------------------------------------------
+	Display Page
+--------------------------------------------------------------------------------------------------->
+<!doctype html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=yes" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="robots" content="noindex">
+	<meta http-equiv='cache-control' content='no-cache'>
+	<meta http-equiv='expires' content='0'>
+	<meta http-equiv='pragma' content='no-cache'>
+	<title>Administration</title>
+	<cfif FindNoCase("Rotary", SESSION.Name)>
+		<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/DACdb/jquery-ui.custom.css">
+	<cfelse>
+		<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/iMembersDB/jquery-ui.custom.css">
+	</cfif>
+
+	<link rel="stylesheet" type="text/css" 	href="../css/standard.css" />
+	<link rel="stylesheet" type="text/css"  href="../Help2/css/helptip.css">
+	<style type="text/css">
+	@media print {
+	.noprint { display: none; }
+	.noshow {display:block !important;}
+	body {zoom:75%; font-size: 8pt; margin:0; padding:0; background: #fff;}
+	}
+	</style>
+
+	<script type="text/javascript" src="../jQuery/js/jquery.min.js"></script>
+	<script type="text/javascript" src="../jQuery/js/jquery-ui.custom.min.js"></script>
+
+	<!--- Required Validate Functions --->
+	<script type="text/javascript" src="../jQuery/validate/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="js/Required.js"></script>			<!--- small customization for MemberAdmin --->
+	<link rel="stylesheet" type="text/css"  href="../css/Required.css" />
+
+	<!--- Table Sort Functions --->
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.metadata.js"></script>
+	<link rel="stylesheet" href="../JQuery/tablesorter/css/theme.custom.css">
+
+	<!--- Editor Functions --->
+	<script type="text/javascript" src="/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript" src="/ckfinder/ckfinder.js"></script>
+
+	<script type="text/javascript" src="../js/standard.js"></script>
+	<!--- <script type="text/javascript" src="../js/Analytics.js"></script> --->
+	<script type="text/javascript" src="../js/debug.js"></script>
+	<script type="text/javascript">
+	var setTab = 0;
+	
+	$(document).ready(function(){
+//alert("ready");
+
+		$.ajaxSetup ({
+			cache: false
+		});
+		
+		$('#tabs').tabs({ selected: setTab });
+		$('#tabs').bind('tabsselect', function(event, ui) {
+			setTab = ui.index;
+			RefreshTable(setTab);
+		});
+
+		RefreshTab(setTab);
+
+		$('#tabs').bind('tabsselect', function(TP, ui) {
+		    setTab = ui.index;
+			RefreshTab(setTab);
+		});
+		
+		$('#Save').on('click', function() {
+			$('#form').submit();
+		});
+		$('#Clone').on('click', function() {
+			$('#form').submit();
+		});		
+	});
+
+	function RefreshTab(t) {
+//alert("RefreshTab="+t);
+
+		$( ".Date" ).datepicker({
+			showOn: 'both', 
+			buttonImage : '../images/tcal/cal.gif',
+	    	buttonText : 'Click Calendar',
+			changeMonth: true,
+			changeYear: true,
+			numberOfMonths: 3
+		});		
+
+		switch(t) {						// Turn ON/OFF Buttons for selected Tab
+			case 1:		// Tab 1
+				break;
+			case 2:		// Tab 2
+				break;
+			case 3:		// Tab 3
+				break;
+			}
+		}
+	</script>
+</head>
+<body class="bdy">
+
+	<div class="sidebarcolumn" align="left">
+		<cfinclude template="Index_Menu.cfm">
+	</div>	<!--- /sidebarcolumn --->
+
+	<div id="contentwrap" class="contentwrap" align="left">
+		<div id="content" class="content" align="left">
+			<cfoutput>
+				<div class="titlewrap">
+					<div id="titlewrapper">
+						<div class="pagetitle">
+							<div class="noprint">
+								<button class="headerbutton" id="programconfig" 		title="Configuration"></button>
+								<button class="headerbutton" id="windowiconfullscreen"	title="Full screen"></button>
+								<button class="headerbutton" id="windowiconstandard" 	title="Standard"></button>
+								<button class="headerbutton" id="printicon"				title="Print"></button>
+								<input  class="headersearch" id="headersearch" name="headersearch"	title="Search for Member" type="text" value="Search...">
+							</div> <!--- /noprint --->
+
+							<h1 class="h1">
+								<cfswitch expression="#Action#">
+									<cfcase value="A">	Add <%=strSourceTable %>	</cfcase>
+									<cfcase value="E">	Edit <%=strSourceTable %>	</cfcase>
+								</cfswitch>
+							</h1>
+						</div>	<!--- /pagetitle --->
+						<div class="seperator"></div>
+					</div>	<!--- /titlewrapper --->
+				</div>	<!--- /titlewrap --->
+			</cfoutput>
+
+			<cfoutput>
+			<form id="form" name="form" action="#CGI.SCRIPT_NAME#" method="post">
+				<input type="hidden"	name="AccountID" 			value="#AccountID#"				id="AccountID">
+				<input type="hidden"	name="ClubID" 				value="#ClubID#"				id="ClubID">
+				<input type="hidden"	name="UserID" 				value="#UserID#"				id="UserID">
+				<input type="hidden"	name="<%= SourceTable.Columns[0].Name %>" 				value="#<%= SourceTable.Columns[0].Name %>#"				id="<%= SourceTable.Columns[0].Name %>">
+				<input type="hidden" 	name="Type" 				value="<%=strSourceTable %>"					id="Type">
+
+				<div class="innercontentwrapper">
+					<div class="subtitle">
+						<div class="noprint">
+							<input type="button" id="Save"	 	class="button" 		value="Save">			<!--- Tab-0 Buttons  --->
+							<input type="button" id="Clone"	 	class="button" 		value="Clone">			<!--- Tab-0 Buttons  --->
+	 					</div>	<!--- /noprint ---/
+						<div class="subtitlecontent">
+							Blah Blah. Say something here
+	 					</div>	<!--- /subtitlesubtitlecontent --->
+						
+						<!---
+							Validation Error
+						 --->
+						<div align="center" class="error" style="display:none; margin-top: 10px; margin-bottom: 10px">
+							<img src="../images/exclaim.gif" alt="Warning!" style="margin: 0px 5px 0px 10px;" />
+							<span></span><br clear="all"/>
+						</div>
+						
+					</div>	<!--- /subtitle --->
+					
+					<div class="contentcontainer">
+						<div class="contentwrapper">
+							<div class="advancedsearchwrap">
+							</div>	<!--- /advancedsearchwrap --->
+							<div class="subinnercontentwrapper">
+
+								<div class="tabswrap">
+									<div id="tabs">
+										<ul class="tabs">
+											<li class="tabs"><a href="##tabs-0" id="Tab0">	Tab 0</a></li>
+											<li class="tabs"><a href="##tabs-1" id="Tab1">	Tab 1</a></li>
+											<li class="tabs"><a href="##tabs-2" id="Tab2">	Tab 2</a></li>
+											<li class="tabs"><a href="##tabs-3" id="Tab3">	Tab 4</a></li>
+										</ul>
+										<div class="tabswrapinner" style="overflow:hidden;">
+											<div id="tabs-0" style="margin-left: 0px; margin-right: 0px;  padding:5px">
+												<!--- <cfinclude template="tabs/Tab0.cfm"> --->
+											</div>
+											<div id="tabs-1" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/Tab1.cfm"> --->
+											</div>
+											<div id="tabs-2" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/Tab2.cfm"> --->
+											</div>
+											<div id="tabs-3" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/Tab3.cfm"> --->
+											</div>
+						 				</div>	<!--- /tabswrapinner --->
+						 			</div>	<!--- /tabs --->
+								</div>	<!--- /tabswrap --->
+
+<cfif Action NEQ "A">
+	<table border="0" cellspacing="0" cellpadding="1" width="100%">
+		<TR>
+			<TD><cfinclude template="<%=strSourceTable %>Admin_tmstmp.cfm">
+		</TR>
+	</table>
+</cfif>
+							</div>	<!--- /subinnercontentwrapper --->
+						</div>	<!--- /contentwrapper --->
+					</div>	<!--- /contentcontainer --->
+				</div>	<!--- /innercontentwrapper --->
+			</form>
+			</cfoutput>
+		</div>	<!--- /content --->
+	</div>	<!--- /contentwrap --->
+
+<div id="hidecontain"  style="display: none;">
+
+	<div id="<%=strSourceTable %>Dialog" title="<%=strSourceTable %>">
+	</div>
+
+	<div id="OrgYearDialog" title="Switch Org Year" style="display:none;">
+		Select an OrgYear 
+		<div style="padding:5px 0px; margin-top:10px;">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td width="100" align="left" valign="top" class="text">OrgYear</td>
+					<td align="left" valign="top" class="text">
+						<cfoutput>
+						<select name="OrgYear2" id="OrgYear2" style="width:150px;">
+							<cfloop index="i" list="#SESSION.OrgYear#,#SESSION.PrevOrgYear#,#SESSION.PrevOrgYear2#,#SESSION.PrevOrgYear3#">
+								<option value="#i#"	<cfif OrgYear EQ i> selected </cfif>> #i#  </option>
+							</cfloop>
+						</select> 
+					</cfoutput>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+
+	<div id="HelpTip" title="Clubs Changes" class="HelpOutside" style="display:none">
+		<div class="main wrapper clearfix">
+		<article>
+		<section>
+		<h1 class="h1"><img height="50" src="../Images/dacdb3.png" border"0" style="float: left; padding-right: 20px;padding-bottom: 10px;"> Club  Changes </h1>
+		<span class="SecHdr3"><%=strSourceTable %> Help / Changes</span><BR>
+		<P>
+		To stop this screen from poping up again, un-check the "<strong><em>Show tip again</em></strong>" checkbox at the top right before closing this window. </P>
+		</section>
+		<h2 class="h2">Changes</h2>
+		The option to use the configuration Cog Wheel has been there for some time.  This option will allow you to select other fields -- or reorder the existing fields that are displayed on this screen.
+		<UL>
+			<LI></LI>
+		</UL>
+		</section>
+		<section>
+		<h2 class="h2">Bug Fixes</h2>
+		The following bugs were addressed with this release:
+		<UL>
+			<LI></LI>
+		</UL>
+		</section>
+		<div class="HelpPrint noprint">
+			<input type="checkbox" name="showTip" value="Y" checked class="TxtIn red"> Show Tip Again? &nbsp;&nbsp;
+			<img src="../images/icons/25_printer.jpg" id="HelpTipPrint">
+		</div>
+		</article>
+
+<!--- 	<aside>
+			<h2 class="h2">Supporting Documentation</h2>
+			<cfdirectory action="List" name="Q" directory="#ExpandPath("help")#">
+			<DL>
+			<cfoutput query="Q">
+				<cfset fullpath = getDirectoryFromPath(getCurrentTemplatePath())>
+				<cfset thisFolder = listlast(fullpath, "\/")>
+				<DT>
+				<cf_FileICON fileName="#Name#">&nbsp;<a href="#SESSION.ApplURL##thisFolder#/help/#Name#">#Name#</a></DT>
+			</cfoutput>
+			</DL>
+		</aside> 
+--->
+		</div>	<!--- /clearfix --->
+	</div>	<!--- /HelpTip --->
+</div>
+
+</body>
+</html>

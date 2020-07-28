@@ -1,0 +1,60 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="./scripts/CFType.cs" -->
+	<!-- #include file="./scripts/SQLType.cs" -->
+	<!-- #include file="./scripts/InputStyle.cs" -->
+	<!-- #include file="./scripts/InputSize.cs" -->
+</script>
+
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+
+<%=strSourceTable %>
+
+foreach loop:
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+	<%= column.Name %>   
+		- Identity: <%= column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() %> 
+		- IsPrimaryKeyMember= <%= column.IsPrimaryKeyMember %>
+		- Native Type: <%= column.NativeType %>
+		- CF Type: <%= CFType(column) %>
+		- SQL Type: <%= SQLType(column) %>
+		- Allow Nulls: <%= column.AllowDBNull %>
+		- Size:  <%= column.Size %> / <%= InputSize(column)%>
+		- Precision  <%= column.Precision %>
+		- Stye:  <%= InputStyle(column) %>
+		- Default: <% if (column.ExtendedProperties.Contains("CS_Default") && column.ExtendedProperties["CS_Default"].Value.ToString().Length > 0) { %> <%= column.ExtendedProperties["CS_Default"].Value %> <% } else { %> No Default <% } %>
+		--Is Computed: <%= column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value) %>
+		--Descruption: <%= column.ExtendedProperties.Contains("CS_Description") %>
+		
+		- 
+<% } %>
+
+
+For loop:
+<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+	
+	<%= SourceTable.Columns[i].Name %>
+		- Identity: <%= SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() %> 
+		- IsPrimaryKeyMember= <%= SourceTable.Columns[i].IsPrimaryKeyMember %>
+		- Natvie Type: <%= SourceTable.Columns[i].NativeType %>
+		- CF Type: <%= CFType(SourceTable.Columns[i]) %>
+		- SQL Type: <%= SQLType(SourceTable.Columns[i]) %>
+		- Allow Nulls: <%= SourceTable.Columns[i].AllowDBNull %>
+		- Size:  <%= SourceTable.Columns[i].Size %>
+		- Precision  <%= SourceTable.Columns[i].Precision %>
+		- Stye:  <%= InputStyle(SourceTable.Columns[i]) %>
+		- Default: <% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_Default") && SourceTable.Columns[i].ExtendedProperties["CS_Default"].Value.ToString().Length > 0) { %> <%= SourceTable.Columns[i].ExtendedProperties["CS_Default"].Value %> <% } else { %> No Default <% } %>
+	
+<% } %>
+
+

@@ -1,0 +1,107 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	<!-- #include file="../scripts/Required.cs" -->
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		return SourceTable.Name.Substring(3) + "Config.cfm";
+	}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+bool fSequence 	= false;
+bool fPositionSort 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+} 
+%>
+<!--------------------------------------------------------------------------------------------
+	<%= strSourceTable %> Configuration
+
+	* $Revision: $
+	* $Date: <%= DateTime.Now.ToShortDateString() %> $
+---------------------------------------------------------------------------------------------->
+<cfsetting showdebugoutput="No">		<!--- MUST BE HERE and set to NO --->
+<cfinclude template="../../secure.cfm">
+<cfinclude template="../../cfscript/profile.cfm">
+
+<cfset IncFields 	 = GetProfile(SESSION.AccountID, 0, 0, "Clubs", "FieldList")>
+<P>
+	Select the visible fields show on the Club Admin below. Un-check fields that are not required on your organization.
+</P>
+
+<cfoutput>
+IncFields=#IncFields#
+<div class="tablewrapper">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+	<TR>
+		<TD valign="top"  width="33%">
+			<table border="0" cellpadding="3" cellspacing="3" width="100%">
+				<THEAD>
+					<TR>
+						<TH width="55%" class="TableHeadL">Field Name</TH>
+						<TH width="15%" class="TableHeadC">Visible</TH>
+					</TR>
+				</THEAD>
+				<TBODY>
+					<TR>
+						<TD class="TableCellL grouprow" colspan="2"><strong><%= strSourceTable %> Information</strong></TD>
+					</TR>
+
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Created_Tmstmp") { %>
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") { %>
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") { %>
+					<% continue; %>
+				<% } %>
+					<TR>
+						<TD class="TableCellL"><% =SplitCamelCase(SourceTable.Columns[i].Name)%>: </TD>
+						<TD class="TableCellC"><input type="Checkbox" name="IncFields" value="<%= SourceTable.Columns[i].Name %>" class="TextIn Inc" <cfif ListFind(IncFields, '<%= SourceTable.Columns[i].Name %>')> checked </cfif>></TD>
+					</TR>
+			<% } %>
+
+				</TBODY>
+			</table>
+		</TD>
+	</TR>
+</table>
+</div>
+
+		</form>
+		</cfoutput>
+	</div>

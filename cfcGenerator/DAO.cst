@@ -1,0 +1,849 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	<!-- #include file="../scripts/Required.cs" -->
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "DAO.cfc";
+		else
+			return SourceTable.Name + "DAO.cfc";
+	}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+bool fSequence 	= false;
+bool fPositionSort 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+	if (column.Name == "PositionSort") { 
+		fPositionSort = true;
+	} 
+	if (column.Name == "Sequence") { 
+		fSequence = true;
+	} 
+} 
+%>
+<!--------------------------------------------------------------------------------------------
+	<%= strSourceTable %>DAO.cfc
+
+	* $Revision: $
+	* $Date: <%= DateTime.Now.ToShortDateString() %> $
+---------------------------------------------------------------------------------------------->
+
+<cfcomponent displayname="<%= strSourceTable %>DAO" output="false">
+
+<!--- Local Variables --->
+<cfset VARIABLES.dsn 		= REQUEST.DSN>
+
+<!--------------------------------------------------------------------------------------------
+	Init - <%= strSourceTable %> Constructor
+
+	Entry Conditions:
+		DSN			- datasource name
+---------------------------------------------------------------------------------------------->
+	<cffunction name="init" access="public" output="false" returntype="<%=strSourceTable %>">
+		<cfargument name="dsn" type="string" required="true">
+		<cfset variables.dsn = ARGUMENTS.dsn>
+		<cfreturn this>
+	</cffunction>
+
+<!--------------------------------------------------------------------------------------------
+	getVariablesScope - Return variable Scope
+
+	Entry Conditions:
+		None
+---------------------------------------------------------------------------------------------->
+	<cffunction name="getVariablesScope" access="public" output="false" returntype="struct">
+		<cfreturn variables />
+	</cffunction>
+
+<!--------------------------------------------------------------------------------------------
+	Get<%=strSourceTable %>Name - Get the name from  <%=strSourceTable %> by <%=strSourceTable %>ID
+	Modifications:
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------->
+	<cffunction Name="Get<%=strSourceTable %>Name" Access="Public" Output="FALSE" returnType="String" DisplayName="Get<%=strSourceTable %>Name">
+		<cfargument Name="<%=strSourceTable %>ID"		 Type="Numeric"		Required="Yes"		Hint="<%=strSourceTable %>ID" >
+
+		<cfset var qGet<%=strSourceTable %>Name = "">
+		<cfset var str<%=strSourceTable %>Name = "">
+
+		<cfquery name="qGet<%=strSourceTable %>Name" datasource="#VARIABLES.DSN#">
+			SELECT 	<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %>
+			FROM 	<%= SourceTable.Name %>
+			WHERE 	<%= SourceTable.Name %>.<%=strSourceTable %>ID  = <CFQUERYPARAM Value="#ARGUMENTS.<%=strSourceTable %>ID#" CFSQLTYPE="CF_SQL_INTEGER">
+		</cfquery>
+		<cfif qGet<%=strSourceTable %>Name.Recordcount GT 0>
+			<cfset str<%=strSourceTable %>Name = qGet<%=strSourceTable %>Name.<%=strSourceTable %>Name>
+		</cfif>
+		<cfreturn str<%=strSourceTable %>Name>
+
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Pick - <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Pick" access="public" output="false" returntype="Query" DisplayName="Pick">
+		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
+		<cfargument Name="AccountID"		Type="Numeric"  	Required="No" 	Hint="AccountID"			Default="#SESSION.AccountID#">
+		<% if (fIsActive || fdFlag) { %>
+		<cfargument Name="Override"		Type="String"  		Required="No" 	Hint="Override" 			Default="N">
+		<% } %>
+		<cfargument Name="SortBy"			Type="String"  		Required="No" 	Hint="SortBy" 				Default="<%= SourceTable.Columns[1].Name %>">
+
+		<cfset var qPick = "" />
+		<cfquery name="qPick" datasource="#VARIABLES.dsn#">
+			SELECT	<% for (int i = 0; i < 2; i++) { %><%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < 1) %>, <% } %>
+			FROM	<%= SourceTable.Name %>
+			WHERE	1 = 1
+			<% if (fAccountID) { %>
+				AND			<%= SourceTable.Name %>.AccountID = <CFQUERYPARAM Value="#ARGUMENTS.AccountID#" CFSQLTYPE="CF_SQL_INTEGER">
+			<% } %>
+			<% if (fdFlag) { %>
+			<cfif ARGUMENTS.Override EQ "N">
+				AND		<%= SourceTable.Name %>.dFlag 		= 'N'
+			</cfif>
+			<% } %>
+			<% if (fIsActive) { %>
+			<cfif ARGUMENTS.Override EQ "N">
+				AND			<%= SourceTable.Name %>.IsActive 	= 'Y'
+			</cfif>
+			<% } %>
+			<cfswitch expression="#ARGUMENTS.SortBy#">
+				<cfcase value="<%= SourceTable.Columns[1].Name %>">ORDER BY 	<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %> </cfcase>
+			</cfswitch>
+		</cfquery>
+		<cfreturn qPick>
+
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Lookup - <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %>  - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Lookup" access="public" output="false" returntype="Query" DisplayName="Lookup">
+		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fIsActive || fdFlag) { %>
+		<cfargument Name="Override"				Type="String"	Required="No" 	Hint="Override"			Default="N">
+		<% } %>
+		<cfargument Name="Filter"				Type="string"	Required="No"	Hint="Filter Value"		Default="">
+		<cfargument Name="SortBy"				Type="String"	Required="No"	Hint="SortBy"			Default="<%= SourceTable.Columns[1].Name %>">
+
+		<cfset var qLookup = "" />
+		<cfquery name="qLookup" datasource="#VARIABLES.dsn#">
+			SELECT
+				<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+				<% } %>
+
+				FROM	<%= SourceTable.Name %>
+			WHERE 		1 = 1
+			<cfif ARGUMENTS.<%= SourceTable.Columns[0].Name %> GT 0>
+				AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[0].Name %> 	= <CFQUERYPARAM Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#"	CFSQLTYPE="CF_SQL_INTEGER">
+			<cfelse>
+				<% if (fAccountID) { %>
+				AND		<%= SourceTable.Name %>.AccountID 	= <CFQUERYPARAM Value="#ARGUMENTS.AccountID#" CFSQLTYPE="CF_SQL_INTEGER">
+				<% } %>
+				<% if (fdFlag) { %>
+				<cfif ARGUMENTS.Override EQ "N">
+					AND	 	<%= SourceTable.Name %>.dFlag 		= 'N'
+				</cfif>
+				<% } %>
+				<% if (fIsActive) { %>
+				<cfif ARGUMENTS.Override EQ "N">
+					AND		<%= SourceTable.Name %>.IsActive 			= 'Y'
+				</cfif>
+				<% } %>
+				<cfif Len(ARGUMENTS.Filter) GT 0>
+					AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %>	LIKE <CFQUERYPARAM Value="#ARGUMENTS.Filter#%"		CFSQLTYPE="CF_SQL_VARCHAR">
+				</cfif>
+			</cfif>
+			<cfswitch expression="#ARGUMENTS.SortBy#">
+				<cfcase value="<%= SourceTable.Columns[1].Name %>">ORDER BY 	<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %> </cfcase>
+			</cfswitch>
+		</cfquery>
+		<cfreturn qLookup>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	View -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="View" access="public" output="false" returntype="Query" DisplayName="View">
+		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fIsActive || fdFlag) { %>
+		<cfargument Name="Override"				Type="String"	Required="No"	Hint="Override"			Default="N">
+		<% } %>
+		<cfargument Name="Filter"				Type="string"	Required="No"	Hint="Filter Value"		Default="">
+		<cfargument Name="SortBy"				Type="String"	Required="No"	Hint="SortBy"			Default="<%= SourceTable.Columns[1].Name %>">
+
+		<cfset var qView = "" />
+		<cfquery name="qView" datasource="#VARIABLES.dsn#">
+			SELECT 
+				<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+				tblUser_1.UserName AS Created_By<% if (i < SourceTable.Columns.Count-1) %>,
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") { %>
+				tblUser_2.UserName AS Modified_By<% if (i < SourceTable.Columns.Count-1) %>,
+					<% continue; %>
+				<% } %>
+				<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+				<% } %>
+
+			FROM	<%= SourceTable.Name %>
+			LEFT OUTER JOIN	tblUser AS tblUser_1 ON <%= SourceTable.Name %>.Created_By = tblUser_1.UserID
+			LEFT OUTER JOIN tblUser AS tblUser_2 ON <%= SourceTable.Name %>.Modified_By = tblUser_2.UserID
+			WHERE 		1 = 1
+			<cfif ARGUMENTS.<%= SourceTable.Columns[0].Name %> GT 0>
+				AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[0].Name %> 	= <CFQUERYPARAM Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#"	CFSQLTYPE="CF_SQL_INTEGER">
+			<cfelse>
+				<% if (fAccountID) { %>
+				AND			<%= SourceTable.Name %>.AccountID = <CFQUERYPARAM Value="#ARGUMENTS.AccountID#" CFSQLTYPE="CF_SQL_INTEGER">
+				<% } %>
+				<% if (fdFlag) { %>
+				<cfif ARGUMENTS.Override EQ "N">
+					AND	 	<%= SourceTable.Name %>.dFlag 		= 'N'
+				</cfif>
+				<% } %>
+				<% if (fIsActive) { %>
+				<cfif ARGUMENTS.Override EQ "N">
+					AND	 	<%= SourceTable.Name %>.IsActive 	= 'Y'
+				</cfif>
+				<% } %>
+				<cfif Len(ARGUMENTS.Filter) GT 0>
+					AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %>	LIKE <CFQUERYPARAM Value="#ARGUMENTS.Filter#%"		CFSQLTYPE="CF_SQL_VARCHAR">
+				</cfif>
+			</cfif>
+			<cfswitch expression="#ARGUMENTS.SortBy#">
+			<% if (fPositionSort) { %>
+				<cfcase value="PositionSort">	ORDER BY dbo.<%= SourceTable.Name %>.PositionSort		</cfcase>
+			<% } %>
+			<% if (fSequence) { %>
+				<cfcase value="Sequence">	ORDER BY dbo.<%= SourceTable.Name %>.Sequence							</cfcase>
+			<% } %>
+				<cfcase value="<%= SourceTable.Columns[1].Name %>">	ORDER BY dbo.<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %>		</cfcase>
+			</cfswitch>
+		</cfquery>
+		<cfreturn qView>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	List -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="List" access="public" output="false" returntype="Query" DisplayName="List">
+		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"			Type="Numeric"	Required="No" 	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fIsActive || fdFlag) { %>
+		<cfargument Name="Override"				Type="String"	Required="No" 	Hint="Override"			Default="N">
+			<% } %>
+		<cfargument Name="Filter"				Type="String"	Required="No" 	Hint="Filter"			Default="">
+		<cfargument Name="SortBy"				Type="String"	Required="No" 	Hint="SortBy"			Default="<%= SourceTable.Columns[1].Name %>">
+
+		<cfset var qList = "" />
+		<cfquery name="qList" datasource="#VARIABLES.dsn#">
+			SELECT 
+				<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+				tblUser_1.UserName AS Created_By<% if (i < SourceTable.Columns.Count-1) %>,
+					<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") { %>
+				tblUser_2.UserName AS Modified_By<% if (i < SourceTable.Columns.Count-1) %>,
+					<% continue; %>
+				<% } %>
+				<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+				<% } %>
+
+			FROM	<%= SourceTable.Name %>
+			LEFT OUTER JOIN	tblUser AS tblUser_1 ON <%= SourceTable.Name %>.Created_By = tblUser_1.UserID
+			LEFT OUTER JOIN tblUser AS tblUser_2 ON <%= SourceTable.Name %>.Modified_By = tblUser_2.UserID
+			WHERE 		1 = 1
+			<% if (fAccountID) { %>
+			AND			<%= SourceTable.Name %>.AccountID = <CFQUERYPARAM Value="#ARGUMENTS.AccountID#" CFSQLTYPE="CF_SQL_INTEGER">
+			<% } %>
+			<% if (fdFlag) { %>
+			<cfif ARGUMENTS.Override EQ "N">
+				AND	 	<%= SourceTable.Name %>.dFlag 		= 'N'
+			</cfif>
+			<% } %>
+			<cfif Len(ARGUMENTS.Filter) GT 0>
+				AND 	<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %> 			LIKE '#ARGUMENTS.Filter#%'
+			</cfif>
+			<% if (fIsActive) { %>
+			<cfif ARGUMENTS.Override EQ "N">
+				AND	 	<%= SourceTable.Name %>.IsActive 	= 'Y'
+			</cfif>
+			<% } %>
+			<cfswitch expression="#ARGUMENTS.SortBy#">
+			<% if (fPositionSort) { %>
+				<cfcase value="PositionSort">	ORDER BY dbo.<%= SourceTable.Name %>.PositionSort		</cfcase>
+			<% } %>
+			<% if (fSequence) { %>
+				<cfcase value="Sequence">	ORDER BY dbo.<%= SourceTable.Name %>.Sequence							</cfcase>
+			<% } %>
+				<cfcase value="<%= SourceTable.Columns[1].Name %>">	ORDER BY dbo.<%= SourceTable.Name %>.<%= SourceTable.Columns[1].Name %>		</cfcase>
+			</cfswitch>
+		</cfquery>
+		<cfreturn qList>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Read -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Read" access="public" output="false" returntype="struct" DisplayName="Read <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"		type="<%= strSourceTable %>"		required="Yes" />
+
+		<cfset var qRead = "" />
+		<cfset var strReturn = structNew() />
+
+		<cfquery name="qRead" datasource="#VARIABLES.dsn#">
+			SELECT
+				<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+				tblUser_1.UserName AS Created_By<% if (i < SourceTable.Columns.Count-1) %>,
+				<% continue; %>
+				<% } %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") { %>
+				tblUser_2.UserName AS Modified_By<% if (i < SourceTable.Columns.Count-1) %>,
+				<% continue; %>
+				<% } %>
+				<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+				<% } %>
+
+			FROM	<%= SourceTable.Name %>
+			LEFT OUTER JOIN	tblUser AS tblUser_1 ON <%= SourceTable.Name %>.Created_By = tblUser_1.UserID
+			LEFT OUTER JOIN tblUser AS tblUser_2 ON <%= SourceTable.Name %>.Modified_By = tblUser_2.UserID
+			WHERE	1 = 1
+			AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" CFSQLType="cf_sql_integer" />
+		</cfquery>
+		<cfif qRead.recordCount>
+			<cfset strReturn = queryRowToStruct(qRead)>
+			<cfset ARGUMENTS.<%= strSourceTable %>.init(argumentCollection=strReturn)>
+		<cfelse>
+			<cfset strReturn = <%= strSourceTable %>.getMemento()>
+		</cfif>
+		<cfreturn strReturn>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Exists -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Exists" access="public" output="false" returntype="boolean" DisplayName="Exists <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"		type="<%= strSourceTable %>"		required="Yes" />
+
+		<cfset var qExists = "">
+
+		<cfquery name="qExists" datasource="#variables.dsn#" maxrows="1">
+			SELECT	count(1) as idexists
+			FROM	<%= SourceTable.Name %>
+			WHERE	<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" CFSQLType="cf_sql_integer" />
+		</cfquery>
+		<cfif qExists.idexists>
+			<cfreturn TRUE />
+		<cfelse>
+			<cfreturn FALSE />
+		</cfif>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Save -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Save" access="public" output="false" returntype="numeric" DisplayName="Save <%= strSourceTable %> <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"		type="<%= strSourceTable %>"		required="Yes" />
+
+		<cfset var pkID = 0 />		<!--- 0=false --->
+		<cfif exists(arguments.<%= strSourceTable %>)>
+			<cfset pkID = update(arguments.<%= strSourceTable %>) />
+		<cfelse>
+			<cfset pkID = create(arguments.<%= strSourceTable %>) />
+		</cfif>
+
+		<cfreturn pkID />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	InsertRec -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+
+	<cfinvoke component="#APPLICATION.DIR#cfc\<%= strSourceTable %>DAO" method="InsertRec" returnvariable="<%= SourceTable.Columns[0].Name %>">
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && column.ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue;  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   
+		<% if (column.Name == "Modified_By") continue; %>
+		<% if (column.Name == "Modified_Tmstmp") continue; %>
+		<% if (column.Name == "Created_By") continue; %>
+		<% if (column.Name == "Created_Tmstmp") continue; %>
+		<cfinvokeargument name="<%= column.Name %>"		Value="#FORM.<%= column.Name %>#">
+	<% } %>
+	</cfinvoke>
+
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="InsertRec" access="public" output="false" returntype="numeric" DisplayName="InsertRec <%= strSourceTable %>">
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && column.ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue;  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   
+		<% if (column.Name == "Modified_By") continue; %>
+		<% if (column.Name == "Modified_Tmstmp") continue; %>
+		<% if (column.Name == "Created_By") continue; %>
+		<% if (column.Name == "Created_Tmstmp") continue; %>
+		<% if ( CFType(column) == "date" ) { %>
+		<cfargument name="<%= column.Name %>"<%= CFTabName( column.Name ) %>Type="string" />
+		<%} else if ( CFType(column) == "numeric" ) { %>
+		<cfargument name="<%= column.Name %>"<%= CFTabName( column.Name ) %>Type="<%= CFType(column) %>"<%= CFTabType(CFType(column)) %>	Required="<%= CFRequired(column) %>"		Default="<%= cfcInitDefault(column) %>" />
+		<%} else if ( CFType(column) == "boolean" ) { %>
+		<cfargument name="<%= column.Name %>"<%= CFTabName( column.Name ) %>Type="<%= CFType(column) %>"<%= CFTabType(CFType(column)) %>	Required="<%= CFRequired(column) %>"		Default="<%= cfcInitDefault(column) %>" />
+		<%} else if ( column.Name == "dFlag" ) { %>
+		<cfargument name="<%= column.Name %>"<%= CFTabName( column.Name ) %>Type="<%= CFType(column) %>"<%= CFTabType(CFType(column)) %>	Required="<%= CFRequired(column) %>"		Default="<%= cfcInitDefault(column) %>" />
+		<% } else { %>
+		<cfargument name="<%= column.Name %>"<%= CFTabName( column.Name ) %>Type="<%= CFType(column) %>"<%= CFTabType(CFType(column)) %>	Required="<%= CFRequired(column) %>"		Default="<%= cfcInitDefault(column) %>" />
+		<% } %>
+	<% } %>
+		<cfargument name="OnErrorContinue"			Type="String"		Required="No"		Default="N" />
+
+		<cfset var qInsert = "" />
+		<cfset var R       = "" />
+
+		<cftry>
+			<cfquery name="qInsert" datasource="#VARIABLES.dsn#" Result="R">
+				INSERT INTO <%= SourceTable.Name %>
+					(
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+					<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,
+				<% } %>
+				
+					)
+				VALUES
+					(
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+					<cfqueryparam value="#SESSION.UserID#"										CFSQLType="CF_SQL_INTEGER" />,
+				<% continue; } %>
+				<% if ( SourceTable.Columns[i].Name == "Created_Tmstmp") { %>
+					<cfqueryparam value="#Now()#"											CFSQLType="CF_SQL_TIMESTAMP" />
+				<% continue; } %>
+				<% if ( CFType(SourceTable.Columns[i]) == "string" ) { %>
+					<% if ( SourceTable.Columns[i].Size < 0 ) {%>
+					<cfqueryparam value="#ARGUMENTS.<%=SourceTable.Columns[i].Name %>#"<%= CFTabName( SourceTable.Columns[0].Name ) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"	null="#not len(ARGUMENTS.<%= SourceTable.Columns[i].Name %>)#" />,
+					<% } else { %>
+					<cfqueryparam value="#Left(ARGUMENTS.<%=SourceTable.Columns[i].Name %>,<%= SourceTable.Columns[i].Size %>)#"<%= CFTabName( SourceTable.Columns[i].Name ) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" 			null="#not len(ARGUMENTS.<%= SourceTable.Columns[i].Name %>)#" />,
+					<% } %>
+				<%} else if ( CFType(SourceTable.Columns[i]) == "date" ) { %>
+					<cfqueryparam value="#ARGUMENTS.<%=SourceTable.Columns[i].Name %>#"<%= CFTabName( SourceTable.Columns[i].Name ) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"	null="#not len(ARGUMENTS.<%= SourceTable.Columns[i].Name %>)#" />,
+				<%} else if ( CFType(SourceTable.Columns[i]) == "numeric" ) { %>
+					<cfqueryparam value="#ARGUMENTS.<%=SourceTable.Columns[i].Name %>#"<%= CFTabName( SourceTable.Columns[i].Name ) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } else { %>
+					<cfqueryparam value="#ARGUMENTS.<%=SourceTable.Columns[i].Name %>#"<%= CFTabName( SourceTable.Columns[i].Name ) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } %>
+			<% } %>
+					)
+			</cfquery>
+			<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
+			<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#R.IDENTITYCOL#" Desc="Insert into <%=strSourceTable %>">
+			<% } else { %>
+			<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="Insert into <%=strSourceTable %>">
+			<% } %>
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error inserting <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn 0 />
+			</cfcatch>
+		</cftry>
+		<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
+		<cfreturn R.IDENTITYCOL />
+		<% } else { %>
+		<cfreturn <%= SourceTable.Columns[0].Name %> />
+		<% } %>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Create -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Create" access="public" output="false" returntype="numeric" DisplayName="Create <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"<%= CFTabName( strSourceTable ) %>Type="<%= strSourceTable %>"	required="Yes" />
+		<cfargument name="OnErrorContinue"  	Type="String"		required="No"	Default="N" />
+
+		<cfset var qCreate = "" />
+		<cfset var R       = "" />
+		<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "false" ) { %>  
+		<cfset var <%= SourceTable.Columns[0].Name %> = ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[0].Name %>() />
+		<% } %>
+
+		<cftry>
+			<cfquery name="qCreate" datasource="#VARIABLES.dsn#" Result="R">
+				INSERT INTO <%= SourceTable.Name %>
+					(
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+					<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count)-3) %>,
+			<% } %>
+				
+					)
+				VALUES
+					(
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") { %>
+					<cfqueryparam value="#SESSION.UserID#"											CFSQLType="CF_SQL_INTEGER" />,
+					<% continue; } %>
+				<% if ( SourceTable.Columns[i].Name == "Created_Tmstmp") { %>
+					<cfqueryparam value="#Now()#"													CFSQLType="CF_SQL_TIMESTAMP" />
+					<% continue; } %>
+				<% if ( CFType(SourceTable.Columns[i]) == "string" ) { %>
+					<% if ( SourceTable.Columns[i].Size < 0 ) {%>
+					<cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabCreate(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"		null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+					<% } else { %>
+					<cfqueryparam value="#Left(ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>(),<%= SourceTable.Columns[i].Size %>)#"<%= CFTabCreateLeft(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"		null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+					<% } %>
+				<%} else if ( CFType(SourceTable.Columns[i]) == "date" ) { %>
+					<cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabCreate(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"		null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+				<%} else if ( CFType(SourceTable.Columns[i]) == "numeric" ) { %>
+					<cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabCreate(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } else { %>
+					<cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabCreate(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } %>
+			<% } %>
+			
+				)
+			</cfquery>
+			<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
+				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#R.IDENTITYCOL#" Desc="Insert into <%=strSourceTable %>">
+			<% } else { %>
+				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="Insert into <%=strSourceTable %>">
+			<% } %>
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error inserting <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn 0 />
+			</cfcatch>
+		</cftry>
+		<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
+		<cfreturn R.IDENTITYCOL />
+		<% } else { %>
+		<cfreturn <%= SourceTable.Columns[0].Name %> />
+		<% } %>
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Update -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Update" access="public" output="false" returntype="numeric" DisplayName="Update <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"<%= CFTabName( strSourceTable ) %>Type="<%= strSourceTable %>"	required="Yes" />
+		<cfargument name="OnErrorContinue"		Type="String"			required="No"	Default="N" />
+
+		<cfset var qUpdate = "" />
+		<cfset var <%= SourceTable.Columns[0].Name %> = ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[0].Name %>() />
+
+		<cftry>
+			<cfquery name="qUpdate" datasource="#VARIABLES.dsn#">
+				UPDATE <%= SourceTable.Name %>
+				SET
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_Tmstmp") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#SESSION.UserID#" 											CFSQLType="CF_SQL_INTEGER" />,
+					<% continue; } %>
+				<% if ( SourceTable.Columns[i].Name == "Modified_Tmstmp") { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#Now()#" 													CFSQLType="CF_SQL_TIMESTAMP" />
+					<% continue; } %>
+				<% if ( CFType(SourceTable.Columns[i]) == "string" ) { %>
+					<% if ( SourceTable.Columns[i].Size < 0 ) {%>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabUpdateParm(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"			null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+					<% } else { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#Left(ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>(),<%= SourceTable.Columns[i].Size %>)#"<%= CFTabUpdateParmLeft(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" 			null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+					<% } %>
+					<%} else if ( CFType(SourceTable.Columns[i]) == "date" ) { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabUpdateParm(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>"			null="#not len(ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[i].Name %>())#" />,
+					<%} else if ( CFType(SourceTable.Columns[i]) == "numeric" ) { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabUpdateParm(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } else { %>
+					<%= SourceTable.Columns[i].Name %><%= CFTabUpdate(SourceTable.Columns[i].Name) %>= <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabUpdateParm(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
+				<% } %>
+			<% } %>
+				WHERE	1 = 1
+				<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
+				AND		<%= SourceTable.Columns[0].Name %><%= CFTabUpdate(SourceTable.Columns[0].Name) %>= <cfqueryparam value="#<%= SourceTable.Columns[0].Name %>#"<%= CFTabUpdateParm(SourceTable.Columns[0].Name) %>CFSQLType="cf_sql_integer" />
+				<% } else { %>
+				AND		<%= SourceTable.Columns[0].Name %><%= CFTabUpdate(SourceTable.Columns[0].Name) %>= <cfqueryparam value="#<%= SourceTable.Columns[0].Name %>#"<%= CFTabUpdateParm(SourceTable.Columns[0].Name) %>CFSQLType="cf_sql_integer" />
+				<% } %>
+			</cfquery>
+			<CF_XLog Table="<%=strSourceTable %>" type="U" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="<%=strSourceTable %> #ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Updated">
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error updating <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn 0 />
+			</cfcatch>
+		</cftry>
+		<cfreturn <%= SourceTable.Columns[0].Name %> />
+
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Delete - <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Delete" access="public" output="false" returntype="boolean" DisplayName="Delete <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"	type="<%= strSourceTable %>"	required="Yes" />
+		<cfargument name="OnErrorContinue"  	Type="String"		required="No"	Default="N" />
+
+		<cfset var qDelete = "" />
+		<cfset var R       = "" />
+		<cftry>
+			<cfquery name="qDelete" datasource="#VARIABLES.dsn#" Result="R">
+				DELETE FROM	<%= SourceTable.Name %>
+				WHERE	1 = 1
+				AND		<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" 					CFSQLType="cf_sql_integer" />
+			</cfquery>
+			<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Physically Deleted">
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%=strSourceTable %>" type="D" Value="0" Desc="Error deleting <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn FALSE />
+			</cfcatch>
+		</cftry>
+		<cfreturn TRUE />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	DeleteLogical - <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="DeleteLogical" access="public" output="false" returntype="boolean" DisplayName="DeleteLogical <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"		type="<%= strSourceTable %>"	required="true" />
+		<cfargument name="OnErrorContinue"		type="String"		required="Yes" 	Default="Y"/>
+
+		<cfset var qDelete = "" />
+		<cfset var errMsg 	= "" />
+		<cfset var <%= SourceTable.Columns[0].Name %> = ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()>
+		<cftry>
+			<cfquery name="qDelete" datasource="#variables.DSN#">
+				UPDATE	<%= SourceTable.Name %> 
+				SET
+					dFlag				= 'Y',
+					Modified_By 		= <cfqueryparam value="#SESSION.UserID#" 					CFSQLType="CF_SQL_INTEGER" />,
+					Modified_Tmstmp 	= <cfqueryparam value="#Now()#" 							CFSQLType="CF_SQL_TIMESTAMP" />
+				WHERE		<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#<%= SourceTable.Columns[0].Name %>#" 					CFSQLType="cf_sql_integer" />
+			</cfquery>
+
+			<CF_XLog Table="<%= strSourceTable %>" type="D" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Logically Deleted">
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%= strSourceTable %>" type="D" Value="0" Desc="Error deleting logical <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn FALSE />
+			</cfcatch>
+		</cftry>
+		<cfreturn TRUE />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	DeleteByID - <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="DeleteByID" access="public" output="false" returntype="boolean" DisplayName="DeleteByID <%= strSourceTable %>">
+		<cfargument name="<%= SourceTable.Columns[0].Name %>"		type="Numeric"	Required="true" />
+		<cfargument name="OnErrorContinue"			type="String"		Required="Yes" 	Default="Y"/>
+
+		<cfset var qDelete = "" />
+		<cfset var R       = "" />
+
+		<cftry>
+			<cfquery name="qDelete" datasource="#VARIABLES.dsn#" Result="R">
+				DELETE	FROM	<%= SourceTable.Name %>
+				WHERE	1 = 1
+				AND		<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" 					CFSQLType="cf_sql_integer" />
+			</cfquery>
+			<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" Desc="<%=strSourceTable %> Deleted">
+			<cfcatch type="database">
+				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" Desc="Error deleting <%=strSourceTable %> (#cfcatch.detail#)" >
+				</cfif>
+				<cfreturn FALSE />
+			</cfcatch>
+		</cftry>
+		<cfreturn TRUE />
+	</cffunction>
+	
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Clone -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Clone" access="public" output="false" returntype="boolean" DisplayName="Clone <%= strSourceTable %>">
+		<cfargument name="<%= strSourceTable %>"	type="<%= strSourceTable %>"	required="Yes" />
+		
+		<cfset var Q 	 = "" />
+		<cfset var <%= strSourceTable %>Obj = "" />
+		<cfset var qClone = "" />
+		<cfset var CloneID = "" />
+
+		<cfset Q = Lookup( <%= SourceTable.Columns[0].Name %>=ARGUMENTS.<%= strSourceTable %>) />
+		<cfset Q = Lookup( AccountID=ARGUMENTS.AccountID, ClubID=ARGUMENTS.ClubID) />
+
+		<cfloop query="Q">
+			<cfinvoke component="<%= strSourceTable %>" method="init" returnvariable="<%= strSourceTable %>Obj">
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_Tmstmp") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if ( SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#Q.<%= SourceTable.Columns[i].Name %>#" />
+			<% } %>
+			</cfinvoke>
+			<cfset CloneID = Create( <%=strSourceTable %>Obj, "Y" ) />
+		</cfloop>
+		<cfreturn TRUE />
+	</cffunction>
+	
+<!--- ----------------------------------------------------------------------------------------------------------------
+	UpdateSequence -  <%= strSourceTable %> Update the Sequence
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="UpdateSequence" access="public" output="false" returntype="Boolean" DisplayName="UpdateSequence">
+		<cfargument name="<%= SourceTable.Columns[0].Name %>" 			type="Numeric" 	required="Yes" />
+		<cfargument name="Sequence" 			type="Numeric" 	required="Yes" />
+
+		<cfset var qUpdate = "" />
+		<cfset var errMsg 	= "" />
+
+		<cftry>
+			<cfquery name="qUpdate" datasource="#variables.DSN#">
+				UPDATE	<%= SourceTable.Name %>
+				SET
+					Sequence 		= <cfqueryparam value="#ARGUMENTS.Sequence#" 		CFSQLType="cf_sql_integer" />,
+					Modified_By 	= <cfqueryparam value="#SESSION.UserID#" 			CFSQLType="CF_SQL_INTEGER" />,
+					Modified_Tmstmp = <cfqueryparam value="#Now()#" 					CFSQLType="CF_SQL_TIMESTAMP" />
+				WHERE
+					<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#"		CFSQLType="cf_sql_integer" />
+			</cfquery>
+			<!--- <CF_XLog Table="<%= strSourceTable %>" type="U" Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" Desc="Sequence updated to #ARGUMENTS.Sequence#"> --->
+
+			<cfcatch>
+				<cfreturn FALSE />
+			</cfcatch>
+		</cftry>
+		<cfreturn  TRUE />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	queryRowToStruct
+	Modifications
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="queryRowToStruct" access="private" output="false" returntype="struct">
+		<cfargument name="qry" type="query" required="true">
+
+		<cfscript>
+			/**
+			 * Makes a row of a query into a structure.
+			 *
+			 * @param query 	 The query to work with.
+			 * @param row 	 Row number to check. Defaults to row 1.
+			 * @return Returns a structure.
+			 * @author Nathan Dintenfass (nathan@changemedia.com)
+			 * @version 1, December 11, 2001
+			 */
+			//by Default, do this to the first row of the query
+			var row = 1;
+			//a var for looping
+			var ii = 1;
+			//the cols to loop over
+			var cols = listToArray(qry.columnList);
+			//the struct to return
+			var stReturn = structnew();
+			//if there is a second argument, use that for the row number
+			if(arrayLen(arguments) GT 1)
+				row = arguments[2];
+			//loop over the cols and build the struct from the query row
+			for(ii = 1; ii lte arraylen(cols); ii = ii + 1){
+				stReturn[cols[ii]] = qry[cols[ii]][row];
+			}
+			//return the struct
+			return stReturn;
+		</cfscript>
+	</cffunction>
+
+</cfcomponent>

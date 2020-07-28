@@ -1,0 +1,343 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-<%= DateTime.Now.ToString("yyyy") %> DACdb, LLC.
+	<%=strSourceTable %>s.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cftry>
+    <cfparam name="AccountID" 				default="#SESSION.AccountID#"					type="numeric">
+    <cfparam name="ClubID" 					default="#SESSION.ClubID#"						type="numeric">
+    <cfparam name="UserID" 					default="#SESSION.UserID#"						type="numeric">
+	<cfparam name="MemberTypeIDs" 			default="#SESSION.MemberType.IsActiveCount#"	type="string">
+
+	<cfparam name="TypeID" 					default="1"										type="numeric"> 
+	<cfparam name="OrgYear" 				default="#SESSION.OrgYear#"						type="string"> 	<!--- optional --->
+
+	<cfparam name="Filter" 					default=""										type="string">
+	<cfparam name="StartRow" 				default="1"										type="numeric">
+	<cfparam name="PageSize" 				default="500"									type="numeric">
+	<cfcatch>
+		Contact Support.<cfabort>
+	</cfcatch>
+</cftry>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta NAME="robots" CONTENT="noindex">
+	<meta http-equiv='cache-control' content='no-cache'>
+	<meta http-equiv='expires' content='0'>
+	<meta http-equiv='pragma' content='no-cache'>
+	<title><%=strSourceTable %> Administration</title>
+	<cfif FindNoCase("Rotary", SESSION.Name)>
+		<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/DACdb/jquery-ui.custom.css">
+	<cfelse>
+		<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/iMembersDB/jquery-ui.custom.css">
+	</cfif>
+
+	<link rel="stylesheet" type="text/css" 	href="../css/sidebar.css" />
+	<link rel="stylesheet" type="text/css" 	href="../css/standard.css" />
+
+	<style type="text/css">
+	@media print {
+	noprint { display: none; }
+	  .noshow {display:block !important;}
+	body {zoom:90%; font-size: 8pt; margin:0; padding:0; background: #fff;}
+	}
+	/* Screen Only */
+	@media screen {
+	.noprint {display:block !important;}
+	.noshow {display:none !important;}
+	body {margin:0; padding:0;}
+	}
+	<!--- Enter Additional Styles Here --->
+	</style>
+
+	<script type="text/javascript" src="../JQuery/js/jquery.min.js"></script>
+	<script type="text/javascript" src="../JQuery/js/jquery-ui.custom.min.js"></script>
+
+
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.metadata.js"></script>
+	<link rel="stylesheet" href="../JQuery/tablesorter/css/theme.custom.css">
+
+	<script type="text/javascript" src="../jQuery/js/jquery.validate.min.js"></script>
+
+	<script type="text/javascript" src="../js/Content.js"></script>
+	<script type="text/javascript" src="../js/Common.js"></script>
+	<!--- <script type="text/javascript" src="../js/Analytics.js"></script> --->
+
+	<!--- <script type="text/javascript" src="../js/Analytics.js"></script> --->
+	<script type="text/javascript" src="../js/standard.js?<cfoutput>#Rand()#</cfoutput>"></script>
+
+	<!--- <script type="text/javascript" src="../js/debug.js"></script> --->
+	<script type="text/javascript" src="js/<%=strSourceTable %>s.js"></script>
+	 <script type="text/javascript">
+	$(document).ready(function(){
+		$("#OrgYearButton").click(function() {
+			$( "#OrgYearDialog" ).dialog({ modal:true, width:400, buttons: [
+				{
+					text: "Update",
+					click: function() { 
+						$("#OrgYear").val( $("#OrgYear2").val() ); 
+						$("#form").submit() 
+					}
+				},
+				{
+					text: "Cancel",
+					click: function() { $("#OrgYearDialog").dialog("close"); }
+				}
+			] });
+		});
+		$('#Add<%=strSourceTable %>').on('click', function() {		
+			Open<%=strSourceTable %>Dialog(0,'A');
+		});
+		$('.Edit<%=strSourceTable %>').on('click', function() {		
+			var id =  $(this).attr( "id" );
+			Open<%=strSourceTable %>Dialog(id,'E');
+		});
+		$('.Del<%=strSourceTable %>').on('click', function() {		
+			var id =  $(this).attr( "id" );
+			Open<%=strSourceTable %>Dialog(id,'D');
+		});
+	});
+		
+	function Open<%=strSourceTable %>Dialog (id, action) {
+		var title = '<%=strSourceTable %> #'+id;
+		if (action == 'D') 
+			title = 'DELETE <%=strSourceTable %> #'+id;
+
+		$.ajax({ 
+			url: 'Dialog/<%=strSourceTable %>Dialog.cfm',
+			data: {
+				Action: action,
+				<%=strSourceTable %>ID: id
+			} 
+			}).done( function( data ) {
+				$("#<%=strSourceTable %>Dialog").html( data );
+				
+				$( "#SearchBtn" ).button();
+
+				$('#SearchBtn').on('click', function() {		
+					$.ajax({ 
+						url: "<%=strSourceTable %>Search.cfm",
+						data: {
+							<%=strSourceTable %>AreaIDs: 1,
+							<%=strSourceTable %>TypeIDs: 1,
+							Languages: '',
+							IsPaid: 'Y'
+						},
+						}).done( function( data ) {
+							$("#ResultsDiv").html( data );
+
+					});
+					return false;
+				});
+						
+			
+				// Open the Dialog
+				$( "#<%=strSourceTable %>Dialog" ).dialog(		
+					{ 
+						title: title,
+						width: 820,
+						height: 700,
+						show: {effect: 'fade', speed: 2000} ,
+						modal: true, 
+
+						buttons: 
+							[
+								{ text: "Cancel", click: function() { $(this).dialog("close") } },
+								
+								{ text: "Delete", click: function() { 
+								  	if (window.confirm("Please confirm - this will delete Charge Item?")) 
+										{
+										$.post("Action/<%=strSourceTable %>Delete.cfm", 
+											$("#<%=strSourceTable %>Form").serialize(),
+										   	function(data) {
+												var obj = $.parseJSON(data);
+												if (!obj.SUCCESS)
+													alert(obj.ERROR);
+												else {
+													$.post("<%=strSourceTable %>s_Search.cfm", 
+														$("#form").serialize(),
+													   	function(data) {
+															$("#<%=strSourceTable %>Div").html( data );
+													});
+												}
+										   	});
+										}
+									else
+										alert("<%=strSourceTable %> was NOT deleted");
+									$(this).dialog("close")
+								}},
+
+								{ text: "Save", click: function() { 
+									$.post("Action/<%=strSourceTable %>Save.cfm", 
+										$("#<%=strSourceTable %>Form").serialize(),
+									   	function(data) {
+											var obj = $.parseJSON(data);
+											if (!obj.SUCCESS)
+												alert(obj.ERROR);
+											else {
+												$.post("<%=strSourceTable %>s_Search.cfm", 
+													$("#form").serialize(),
+												   	function(data) {
+														$("#<%=strSourceTable %>Div").html( data );
+												});
+											}
+										});
+									$(this).dialog("close")
+								}}
+							]
+
+				});
+				if (id == 0 || action == 'E')  // If we are adding - or editing - hide the delete button
+					$(".ui-dialog-buttonpane button:contains('Delete')").hide(); 
+				if (action == 'D')  // If we are deleting - hide the save button
+					$(".ui-dialog-buttonpane button:contains('Save')").hide(); 
+		});			
+	}			
+	</script>
+</head>
+
+<body class="bdy">
+	<div class="menuwrapper">
+    </div>
+    <div class="sidebarcolumn" align="left">
+    	<div class="sidebarcolumninnerwrap">
+            <ul id="nav">
+           		<cfinclude template="<%=strSourceTable %>_Menu.cfm">
+            </ul>
+	</div>
+	</div>	<!--- /sidebarcolumn --->
+	<div id="contentwrap" class="contentwrap" align="left">
+    	<div id="content" class="content" align="left">
+			<cfoutput>
+				<div class="titlewrap">
+					<div id="titlewrapper">
+						<div class="pagetitle">
+							<div class="noprint">
+								<button class="headerbutton" id="programconfig" 		title="Configuration"></button>
+								<button class="headerbutton" id="windowiconfullscreen"	title="Full screen"></button>
+								<button class="headerbutton" id="windowiconstandard" 	title="Standard"></button>
+								<button class="headerbutton" id="printicon"				title="Print"></button>
+								<button class="headerbutton" id="pmailicon" 			title="Pmail"></button>
+								<button class="headerbutton" id="excelicon" 			title="Excel"></button>
+								<button class="headerbutton" id="wordicon" 				title="Word"></button>
+								<input  class="headersearch" id="headersearch" name="headersearch"	title="Search for Member" type="text" value="Search...">
+							</div>
+							<h1 class="h1"><%=strSourceTable %> Listing</h1>
+						</div>
+						<div class="seperator"></div>
+					</div>
+				</div>
+			</cfoutput>	
+			<div class="innercontentwrapper">
+				<div class="subtitle">
+
+					<div class="noprint">
+						<!--- Second row supplemental buttons go HERE --->
+							<button id="Add<%=strSourceTable %>" class="button">Add <%=strSourceTable %></button>
+							<button id="OrgYearButton" 	class="button">Change OrgYear</button>
+					</div>
+					Recent <%=strSourceTable %>s are shown below.
+				</div>
+				<div class="contentcontainer">
+				<cfoutput>
+					<form id="form" name="form" action="#CGI.SCRIPT_NAME#" method="post">
+						<input type="hidden" 	name="Type" 			value="UserIDs"			id="Type">
+						<input type="hidden" 	name="Filter" 			value="#Filter#"		id="Filter">
+						<input type="hidden"	name="StartRow" 		value="#StartRow#"		id="Startrow">  
+
+						<div class="contentwrapper">
+							<div class="advancedsearchwrap">
+								<div class="advancedsearchheader">
+									<div style="float:left; position:absolute; margin-left:35px; margin-top:5px;">
+										<a href="##" id="advancedsearchlink" class="StandardWhiteLink"> Display Options </a>
+									</div>
+								</div>	<!--- /advancedsearchheader --->
+							</div>	<!--- /advancedsearchwrap --->
+							<div class="subinnercontentwrapper">
+
+<div id="<%=strSourceTable %>Div">
+<cfinclude template="<%=strSourceTable %>s_Search.cfm">
+</div>
+
+								<div class="pagecontrols">
+								</div>	<!--- /pagecontrols --->
+							</div>	<!--- /subinnercontentwrapper --->
+						</div>	<!--- /contentwrapper --->
+					</form>
+				</cfoutput>
+				</div>	<!--- /contentcontainer --->
+			</div>	<!--- /innercontentwrapper --->
+		</div>	<!--- /content --->
+	</div>	<!--- /contentwrap --->
+	
+	<div id="hidecontain">
+		<div class="searchwrap" title="Search">
+			<form class="popupform">
+				<table border="0" cellpadding="0" cellspacing="0" width="100%">
+					<TR>
+						<TD align="left" valign="top" style="border-bottom:0px;">
+							Temp
+						</TD>
+					</TR>
+				</table>
+			</form>
+		</div> 
+		<div class="programwrap" title="Setup" style="display:none;">
+			<form class="programform">
+				No setup parameters are defined at this time.
+			</form>
+		</div>	<!--- /programwrap --->
+	</div>	<!--- /hidecontain --->
+	<div id="<%=strSourceTable %>Dialog" title="<%=strSourceTable %>" class="tabs">
+	</div>
+	<div id="OrgYearDialog" title="Switch Org Year" style="display:none;">
+		Select an OrgYear 
+		<div style="padding:5px 0px; margin-top:10px;">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td width="100" align="left" valign="top" class="text">OrgYear</td>
+					<td align="left" valign="top" class="text">
+						<cfoutput>
+						<select name="OrgYear2" id="OrgYear2" style="width:150px;">
+							<cfloop index="i" list="#SESSION.OrgYear#,#SESSION.PrevOrgYear#,#SESSION.PrevOrgYear2#,#SESSION.PrevOrgYear3#">
+								<option value="#i#"	<cfif OrgYear EQ i> selected </cfif>> #i#  </option>
+							</cfloop>
+						</select> 
+					</cfoutput>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

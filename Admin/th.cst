@@ -1,0 +1,119 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Text.RegularExpressions" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+<!-- #include file="../scripts/CFDefault.cs" -->
+public override string GetFileName() {
+	return "TH.cfm";
+}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	<%= strSourceTable %> TH.cfm
+---------------------------------------------------------------------------------------------------->
+<cfoutput>
+<% int n=0; %>
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<% n=n+1; %>
+<%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
+	<TH class="TableHeadC" width="25">ID</TH>
+<% } else { %>
+	<%  switch (column.Name.ToLower() )  %>
+	<% { %>
+		<% case "positionsort":	%>
+		<% case "sequence":	%>
+			<% break; %>
+		<% case "isactive":	%>
+	<TH class="TableHeadC" width="50">Active </TH>
+			<% break; %>
+	<% case "modified_tmstmp":	%>
+	<TH class="TableHeadC sorter-shortDate dateFormat-mmddyy" width="100">Modified</TH>
+			<% break; %>
+		<% case "modified_by":		%>
+			<% break; %>
+		<% case "created_tmstmp":	%>
+	<TH class="TableHeadC sorter-shortDate dateFormat-mmddyy" width="100">Created</TH>
+			<% break; %>
+		<% case "created_by":		%>
+			<% break; %>
+		<%		break;				%>
+		<% case "accountid":		%>
+			<% break; %>
+		<% case "orgyear":		%>
+			<% break; %>
+		<% default:%>
+			<% string strColType = column.NativeType;	%>
+			<% switch (strColType)	%>
+				<% {	%>
+					<% case "bit":		%>
+					<% case "bigint":	%>
+					<% case "int":		%>
+					<% case "numeric":	%>
+					<% case "smallint":	%>
+					<% case "tinyint":	%>
+	<TH class="TableHeadL" width="<%= column.Size %>"<% if (n==2) { %> style="white-space:nowrap;"<% }%>><%= column.Name %></TH>
+						<% break; %>
+					<% case "decimal":	%>
+					<% case "float":	%>
+					<% case "money":	%>
+	<TH class="TableHeadL" width="<%= column.Size %>"<% if (n==2) { %> style="white-space:nowrap;"<% }%>><%= column.Name %></TH>
+						<% break; %>
+					<% case "nvarchar":	%>
+					<% case "varchar":	%>
+					<% case "char":		%>
+						<% if ( column.Size < 1) { %>
+	<TH class="TableHeadL" width="100"><%= column.Name %></TH>
+						<% } else { %>
+	<TH class="TableHeadL" width="<%= column.Size %>"<% if (n==2) { %> style="white-space:nowrap;"<% }%>><%= column.Name %></TH>
+						<% } %>
+						<% break; %>
+					<% case "xml":		%>
+					<% case "date":		%>
+					<% case "datetime":	%>
+					<% case "smalldatetime":	%>
+	<TH class="TableHeadL" width="<%= column.Size %>"<% if (n==2) { %> style="white-space:nowrap;"<% }%>><%= column.Name %></TH>
+				<% break; %>
+			<% default:	%>
+				<% break; %>
+			<% } %>
+			<% break; %>
+		<% } %>
+	<% } %>
+<% } %>
+</cfoutput>

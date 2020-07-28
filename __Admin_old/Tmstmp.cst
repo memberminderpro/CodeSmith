@@ -1,0 +1,43 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2016 DACdb, LLC.
+	<%=strSourceTable %>Admin_Tmstmp.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+
+<cfif Action NEQ "A">
+	<HR>
+	<span class="small">
+		<cfoutput>
+			<CFIF IsDate(<%=strSourceTable %>.Modified_Tmstmp)>Last updated on: <B>#DateFormat(DateAdd("n",SESSION.TimeAdj, <%=strSourceTable %>.Modified_Tmstmp), SESSION.DateFmt)#</B>
+			At: <B>#TimeFormat(DateAdd("n",SESSION.TimeAdj, <%=strSourceTable %>.Modified_Tmstmp), SESSION.TimeFmt)#</B><CFELSE>Last Updated on: <B>Never</B></CFIF>&nbsp;
+			By: <cfif <%=strSourceTable %>.Modified_By GT 0><B>#<%=strSourceTable %>.Modified_By#</B><cfelse><B>System</B></cfif> &nbsp;
+			Created: <B>#DateFormat(DateAdd("n",SESSION.TimeAdj, <%=strSourceTable %>.Created_Tmstmp), SESSION.DateFmt)#</B>
+			By: <cfif <%=strSourceTable %>.Created_By GT 0><B>#<%=strSourceTable %>.Created_By#</B><cfelse><B>System</B></cfif> &nbsp;
+		</cfoutput>
+	</span>
+</cfif>

@@ -1,0 +1,341 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-<%= DateTime.Now.ToString("yyyy") %> DACdb, LLC.
+	<%=strSourceTable %>s.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm">
+<cfsetting showdebugoutput="yes">
+
+<cfinclude template="../cfscript/profile.cfm">
+
+<cftry>
+    <cfparam name="AccountID" 				default="#SESSION.AccountID#"					type="numeric">
+    <cfparam name="ClubID" 					default="#SESSION.ClubID#"						type="numeric">
+    <cfparam name="UserID" 					default="0"										type="numeric">
+    <cfparam name="<%=strSourceTable %>ID" 				default="0"										type="numeric">
+
+	<cfparam name="Update" 					default="N"										type="string">
+
+	<cfparam name="Filter" 					default=""										type="string">
+	<cfparam name="StartRow" 				default="1"										type="numeric">
+	<cfif IsDefined("Client.CMPS")>
+		<cfparam name="PageSize" 			default="#Client.CMPS#"							type="numeric">
+	<cfelse>
+		<cfparam name="PageSize" 			default="25"									type="numeric">
+	</cfif>
+
+    <cfcatch>
+    	Contact Support <cfoutput>#cfcatch.message#<BR>#cfcatch.detail#</cfoutput>.<cfabort>
+    </cfcatch>
+</cftry>
+
+<cfif Update EQ "Y">
+	<cfinclude template="<%=strSourceTable %>Admin_save.cfm">
+</cfif>
+
+<!-------------------------------------------------------------------------------------------------
+	Setup
+---------------------------------------------------------------------------------------------------->
+<cfset start_tick 					= GetTickCount()>
+
+<!-------------------------------------------------------------------------------------------------
+	Get the <%=strSourceTable %> Information
+---------------------------------------------------------------------------------------------------->
+
+<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC2\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+<cfinvoke component="#APPLICATION.DIR#CFC2\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+
+
+<!-------------------------------------------------------------------------------------------------
+	Display Page
+---------------------------------------------------------------------------------------------------->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta NAME="robots" CONTENT="noindex">
+	<meta http-equiv='cache-control' content='no-cache'>
+	<meta http-equiv='expires' content='0'>
+	<meta http-equiv='pragma' content='no-cache'>
+
+    <title><%=strSourceTable %> Administration</title>
+    <cfif FindNoCase("Rotary", SESSION.Name)>
+    	<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/DACdb/jquery-ui.custom.css">
+    <cfelse>
+		<link rel="Stylesheet" type="text/css" 	href="../JQuery/css/iMembersDB/jquery-ui.custom.css">
+    </cfif>
+    <link rel="stylesheet" type="text/css" 	href="../css/sidebar.css" />
+    <link rel="stylesheet" type="text/css" 	href="../css/standard.css" />
+
+	<style type="text/css">
+	@media print {
+	noprint { display: none; }
+	  .noshow {display:block !important;}
+	body {zoom:90%; font-size: 8pt; margin:0; padding:0; background: #fff;}
+	}
+	/* Screen Only */
+	@media screen {
+	.noprint {display:block !important;}
+	.noshow {display:none !important;}
+	body {margin:0; padding:0;}
+	}
+	<!--- Enter Additional Styles Here --->
+	</style>
+
+	<script type="text/javascript" src="../JQuery/js/jquery.min.js"></script>
+	<script type="text/javascript" src="../JQuery/js/jquery-ui.custom.min.js"></script>
+
+
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="../JQuery/tablesorter/jquery.metadata.js"></script>
+	<link rel="stylesheet" href="../JQuery/tablesorter/css/theme.custom.css">
+
+	<script type="text/javascript" src="../jQuery/js/jquery.validate.min.js"></script>
+
+	<script type="text/javascript" src="/ckeditor/ckeditor.js?<cfoutput>#Rand()#</cfoutput>"></script>
+	<script type="text/javascript" src="/ckfinder/ckfinder.js?<cfoutput>#Rand()#</cfoutput>"></script>
+
+	<!--- <script type="text/javascript" src="../js/Analytics.js"></script> --->
+	<script type="text/javascript" src="../js/standard.js?<cfoutput>#Rand()#</cfoutput>"></script>
+
+	<!--- <script type="text/javascript" src="../js/Analytics.js"></script> --->
+	<!--- <script type="text/javascript" src="../js/debug.js"></script> --->
+	<script type="text/javascript" src="../js/common.js"></script>
+	<script type="text/javascript" src="js/<%=strSourceTable %>Admin.js?<cfoutput>#Rand()#</cfoutput>"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function(){
+	//	alert("here");
+		$.ajaxSetup ({
+			cache: false
+		});
+
+		$('#tabs').tabs();
+		$( "#tabs" ).on( "tabsselect", function( <%=strSourceTable %>, ui ) {
+		    setTab = ui.index;
+			var tabid = $('#tabs .ui-tabs-panel:eq(' +   setTab + ')').attr('id');
+			RefreshTable(tabid);
+		});
+
+		$(".button").button({
+			text: true
+		});
+
+		RefreshTable( 'tabs-0' );
+
+		$('#tabs').tabs(  {
+			select: function(e, ui) {
+				if (ui.index == 2) {
+					setTimeout(function(){setMap();},500);
+				}
+			}
+		});
+
+		$( "#CharterDate" ).datepicker({
+				showOn: 'both',
+				buttonImage : '../images/tcal/cal.gif',
+				buttonText : 'Click Calendar',
+				changeMonth: true,
+				changeYear: true,
+				numberOfMonths: 1
+			});
+
+		setupEditor( $("#ClubID").val() )
+	});
+
+	function RefreshTable(t) {
+	  // alert("RefreshTable="+t);
+
+		switch(t) {						// Turn ON/OFF Buttons for selected Tab
+			case 'tabs-0':
+				break;
+			case 'tabs-1':
+				break;
+			case 'tabs-2':
+				break;
+			case 'tabs-3':
+				break;
+		}
+	}
+
+	function setupEditor(id) {
+		var editor1 = CKEDITOR.replace( 'editor1', {
+			toolbar: 'Default',
+
+			filebrowserBrowseUrl : 		'/ckfinder/ckfinder.html',
+			filebrowserImageBrowseUrl : '/ckfinder/ckfinder.html',
+			filebrowserUploadUrl : 		'/ckfinder/core/connector/cfm/connector.cfm?command=QuickUpload',
+			filebrowserImageUploadUrl : '/ckfinder/core/connector/cfm/connector.cfm?command=QuickUpload',
+
+			filebrowserImageBrowseUrl : '/ckfinder/ckfinder.html',
+			filebrowserImageUploadUrl : '/ckfinder/core/connector/cfm/connector.cfm?command=QuickUpload',
+
+			filebrowserWindowWidth : '1000',
+		 	filebrowserWindowHeight : '700',
+
+  			fullPage : false,				// Required for full page editing <HTML> to </HTML>
+			allowedContent: true
+		});
+
+		CKFinder.setupCKEditor( editor,
+		{
+			basePath : '/ckfinder/',
+			rememberLastFolder : false
+		});
+	}
+	</script>
+
+</head>
+
+<!-------------------------------------------------------------------------------------------------
+	Display Results
+---------------------------------------------------------------------------------------------------->
+<body class="bdy">
+	<div class="menuwrapper">
+	</div>
+<!---
+
+	<div class="sidebarcolumn" align="left">
+		<div class="sidebarcolumninnerwrap">
+			<ul id="nav" class="noprint">
+			<!--- 	<cfinclude template="<%=strSourceTable %>_Menu.cfm"> --->
+			</ul>
+		</div>	<!--- /sidebarcolumninnerwrap --->
+	</div>	<!--- /sidebarcolumn --->
+ --->
+
+	<div id="contentwrap" class="contentwrap" align="left">
+		<div id="content" class="content" align="left">
+			<cfoutput>
+				<div class="titlewrap">
+					<div id="titlewrapper">
+
+						<div class="pagetitle">
+							<div class="noprint">
+								<button class="headerbutton" id="programconfig" 		title="Configuration"></button>
+								<button class="headerbutton" id="windowiconfullscreen"	title="Full screen"></button>
+								<button class="headerbutton" id="windowiconstandard" 	title="Standard"></button>
+								<!--- <button class="headerbutton" id="printicon"				title="Print"></button> --->
+								<!--- <button class="headerbutton" id="pmailicon" 				title="Pmail"></button> --->
+								<!--- <button class="headerbutton" id="excelicon" 				title="Excel"></button> --->
+								<!--- <button class="headerbutton" id="wordicon" 				title="Word"></button> --->
+								<input  class="headersearch" id="headersearch" name="headersearch"	title="Search for <%=strSourceTable %>" type="text" value="Search...">
+							</div> <!--- /noprint --->
+							<h1 class="h1"><%=strSourceTable %> Listing</h1>
+						</div>	<!--- /pagetitle --->
+						<div class="seperator"></div>
+					</div>	<!--- /titlewrapper --->
+				</div>	<!--- /titlewrap --->
+			</cfoutput>
+
+			<div class="innercontentwrapper">
+				<div class="subtitle">
+					<div class="noprint">
+						<input type="button" id="Update"		class="goldbutton" 			value="Update <%=strSourceTable %>">
+						<input type="button" id="Add"			class="editbutton" 			value="Add <%=strSourceTable %>">
+						<input type="button" id="Delete"		class="button" 				value="Delete <%=strSourceTable %>">
+						<input type="button" id="Clone"			class="button" 				value="Clone <%=strSourceTable %>">
+					</div>	<!--- /noprint --->
+					<div class="subtitlecontent">
+						All the <%=strSourceTable %>s of your <cfoutput><cfif ClubID EQ 0 >#Session.AccountLabel#<cfelse>#Session.ClubLabel#</cfif></cfoutput> are shown below.
+					</div>	<!--- /subtitlecontent --->
+				</div>	<!--- /subtitle --->
+
+				<div class="contentcontainer">
+					<cfoutput>
+					<form id="form" name="form" action="#CGI.SCRIPT_NAME#" method="post"   enctype="multipart/form-data">
+						<input type="hidden"	name="AccountID" 		value="#AccountID#"			id="AccountID">
+						<input type="hidden"	name="ClubID" 			value="#ClubID#"			id="ClubID">
+						<input type="hidden" 	name="Type" 			value="<%=strSourceTable %>"				id="Type">
+
+						<input type="hidden" 	name="Filter" 			value="#Filter#"			id="Filter">
+						<input type="hidden"	name="StartRow" 		value="#StartRow#"			id="Startrow">
+
+						<div class="contentwrapper">
+							<div class="advancedsearchwrap">
+							</div>	<!--- /advancedsearchwrap --->
+							<div class="subinnercontentwrapper">
+
+								<div class="tabswrap">
+									<div id="tabs">
+										<ul class="tabs">
+											<li class="tabs">	<a href="##tabs-0" id="Info">		Information</a>	</li>
+											<li class="tabs">	<a href="##tabs-1" id="Schedule">	Tab-1</a>		</li>
+											<li class="tabs">	<a href="##tabs-2" id="Links">		Tab-2</a>		</li>
+											<li class="tabs">	<a href="##tabs-3" id="Options">	Tab-3</a>		</li>
+										</ul>
+
+										<div class="tabswrapinner" style="overflow:hidden;">
+											<div id="tabs-0" style="margin-left: 0px; margin-right: 0px;  padding:5px">
+												<!--- <cfinclude template="tabs/Info.cfm"> --->
+											</div>
+											<div id="tabs-1" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/tab1.cfm"> --->
+											</div>
+											<div id="tabs-2" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/tab2.cfm"> --->
+											</div>
+											<div id="tabs-3" style="margin-left: 0px; margin-right: 0px;  padding:5px;">
+												<!--- <cfinclude template="tabs/tab3.cfm"> --->
+											</div>
+										</div>	<!--- /tabswrapinner --->
+						 			</div>	<!--- /tabs --->
+								</div>	<!--- /tabswrap --->
+							</div>	<!--- /subinnercontentwrapper --->
+						</div>	<!--- /contentwrapper --->
+					</form>
+					</cfoutput>
+				</div>	<!--- /contentcontainer --->
+			</div>	<!--- /innercontentwrapper --->
+		</div>	<!--- /content --->
+	</div>	<!--- /contentwrap --->
+
+<cfif <%=strSourceTable %>ID NEQ 0>
+	<table border="0" cellspacing="0" cellpadding="1" width="100%">
+		<TR>
+			<TD><cfinclude template="<%=strSourceTable %>_Tmstmp.cfm"></TD>
+		</TR>
+	</table>
+</cfif>
+
+<div style="display:none; height:0px; overflow:hidden;" class="hidewrap">
+
+	<div class="<%=strSourceTable %>Dialog" title="<%=strSourceTable %>">
+	</div>
+
+	<div class="programwrap" title="Setup" style="display:none;">
+		No setup parameters are defined at this time.
+	</div>	<!--- /programwrap --->
+</div>	<!--- /hidewrap --->
+
+
+</body>
+</html>
+
+
+
+
+

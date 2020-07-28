@@ -1,0 +1,63 @@
+﻿<%-- 
+CodeSmith DBDocumenter Templates
+Author:  Jason Alexander (jalexander@telligent.com), Eric J. Smith
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Src="DBDocumenterTemplate.cs" Inherits="DBDocumenterTemplate" Debug="False" Description="Template description here."  OutputType="None" %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="Context" Description="Database that the documentation should be based on." DeepLoad="True" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Property Name="ServerName" Type="System.String" Category="Output" Description="The name of the actual database server that is being documented." %>
+<%@ Property Name="DocumentationTitle" Type="System.String" Default="Database Documentation" Category="Output" Description="Defines what the title of the HTML page that will be generated will be." %>
+<%@ Register Name="Add" Template="Add.cst" %>
+<%@ Register Name="Del" Template="del.cst" %>
+<%@ Register Name="edit" Template="edit.cst" %>
+<%@ Register Name="td" Template="td.cst" %>
+<%@ Register Name="th" Template="th.cst" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import NameSpace="System.IO" %>
+<script runat="template">
+private int _currentStep = 0;
+private string _outputDirectory = "C:\\inetpub\\wwwroot\\rotary\\temp\\output\\";
+
+string[] files = Directory.GetFiles("./", "");
+
+// Override the Render method and have it output the sub-templates to file.
+public override void Render(TextWriter writer)
+{
+    this.Progress.MaximumValue = 375;
+    
+    DateTime startTime = DateTime.Now;
+    
+    if (!Directory.Exists(_outputDirectory))
+    {
+        // Create output directory.
+        Trace.WriteLine("Creating output directory...");
+        Directory.CreateDirectory(_outputDirectory);
+    }
+    else
+    {
+        // Clean up the existing output directory.
+        Trace.WriteLine("Cleaning up existing output directory...");
+        this.DeleteFiles(_outputDirectory, "*.cfm");
+    }
+    this.Progress.Value = 25;
+    
+		
+		for (int i = 0; i < files.Length; i++)
+		{
+			try
+			{
+				File.Create(_outputDirectory + files[i]);
+				Trace.WriteLine("To view the output go here: " + _outputDirectory + files[i] );
+			}
+			catch (Exception ex)
+			{
+				Response.WriteLine("Error while attempting to create file (" + files[i] + ").\r\n" + ex.Message);
+			}
+		}
+
+    Trace.WriteLine("Generation complete. Execution time: " + (DateTime.Now - startTime).ToString());
+}
+
+
+</script>

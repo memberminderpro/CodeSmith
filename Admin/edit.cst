@@ -1,0 +1,161 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Text.RegularExpressions" %>
+<script runat="template">
+<!-- #include file="../scripts/CFType.cs" -->
+<!-- #include file="../scripts/cfcInitDefault.cs" -->
+<!-- #include file="../scripts/CFDefault.cs" -->
+public override string GetFileName() {
+	return "Edit.cfm";
+}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	<%= strSourceTable %> Edit.cfm
+---------------------------------------------------------------------------------------------- --->
+
+<cfset N = 0>
+<div class="tablewrapper">
+<div class="tabletitle"><%= strSourceTable %></div>
+<table border="0" cellpadding="0" cellspacing="0" class="tablesorter hasStickyHeaders" width="100%">
+	<THEAD>
+	<TR>
+		<cfinclude template="TH.cfm">
+	</TR>
+	</THEAD>
+	<cfif Q.Recordcount GT 0>
+		<cfoutput query="Q">
+			<cfset N = N + 1>
+			<tr id="Q_#Q.<%= SourceTable.Columns[0].Name %>#">
+				<input type="Hidden" name="LineItem"				value="#N#">
+				<input type="Hidden" name="<%= SourceTable.Columns[0].Name %>_#N#"	value="#Q.<%= SourceTable.Columns[0].Name %>#">
+				<input type="Hidden" name="Chk_#N#"					value="">
+				<%  if ( fOrgYear )  { %>
+				<input type="Hidden" name="OrgYear_#N#" value="#Q.OrgYear#">
+				<% } %>
+
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
+				<TD class="TableCellC small">#Q.<%= column.Name %>#</TD>
+<% } else { %>
+	<%  switch (column.Name.ToLower() )  %>
+	<% { %>
+		<% case "positionsort":	%>
+		<% case "sequence":	%>
+			<% break; %>
+		<% case "modified_tmstmp":	%>
+				<TD class="TableCellL small">#Q.Modified_By#<BR><CF_DisplayDate Date="#Q.Modified_Tmstmp#"></TD>
+			<% break; %>
+		<% case "modified_by":		%>
+			<% break; %>
+		<% case "created_tmstmp":	%>
+				<TD class="TableCellL small">#Q.Created_By# <BR><CF_DisplayDate Date="#Q.Created_Tmstmp#"></TD>
+			<% break; %>
+		<% case "created_by":		%>
+			<% break; %>
+		<% case "accountid":		%>
+			<input type="Hidden" name="AccountID_#N#" 		value="#Q.AccountID#">
+
+			<% break; %>
+		<% case "orgyear":		%>
+			<% break; %>
+		<% default:%>
+			<% string strColType = column.NativeType;	%>
+			<% switch (strColType)	%>
+				<% {	%>
+					<% case "bit":		%>
+					<% case "bigint":	%>
+					<% case "int":		%>
+					<% case "numeric":	%>
+					<% case "smallint":	%>
+					<% case "tinyint":	%>
+					<% if ( column.Name.ToLower() != "positionsort" && column.Name.ToLower() != "sequence") { %>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#Q.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtInC"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);" required></TD>
+							<% } %>
+						<% break; %>
+					<% case "money":	%>
+					<% case "decimal":		%>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#DecimalFormat(Q.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
+						<% break; %>
+					<% case "float":	%>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#NumberFormat(Q.<%= column.Name %>,'9,999.9')#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
+						<% break; %>
+					<% case "char":		%>
+				<% if ( column.Size == 1 ) { %>
+				<TD class="TableCellC">
+				<input type="checkbox"	name="<%= column.Name %>_#N#"		value="Y"	<cfif Q.<%= column.Name %> EQ "Y"> checked </cfif> class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);">
+				-- or --
+				<select id="<%= column.Name %>_#N#" name="<%= column.Name %>_#N#" class="TxtIn"	onChange="checkRow('#N#');">
+						<option value="N" <cfif Q.<%= column.Name %> EQ "N"> selected </cfif>>No	</option>
+						<option value="Y" <cfif Q.<%= column.Name %> EQ "Y"> selected </cfif>>Yes</option>
+					</select>
+				</td>
+					<% } else { %>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#Trim(Q.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);" required></td>
+						<% } %>
+						<% break; %>
+					<% case "nvarchar":	%>
+					<% case "varchar":	%>
+						<% if ( column.Size < 1) { %>
+				<TD class="TableCellL"><textarea	name="<%= column.Name %>_#N#" rows="2"	cols="40"	class="TxtIn" onChange="checkRow('#N#');">#Trim(Q.<%= column.Name %>)#</textarea></TD>
+						<% } else { %>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#Trim(Q.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);" required></TD>
+						<% } %>
+						<% break; %>
+					<% case "xml":		%>
+				<TD class="TableCellL"><textarea	name="<%= column.Name %>_#N#" rows="2"	cols="40"	class="TxtIn" required>#Trim(Q.<%= column.Name %>)#</textarea></TD>
+						<% break; %>
+					<% case "date":		%>
+					<% case "datetime":	%>
+					<% case "smalldatetime":	%>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#Q.<%= column.Name %>#"  		size="<%= column.Size %>"  maxlength="<%= column.Size %>"   class="TxtIn Date" onChange="checkRow('#N#');"  onkeypress="return noEnter(event);" required></TD>
+						<% break; %>
+					<% default:	%>
+						<% break; %>
+				<% } %>
+			<% break; %>
+		<% } %>
+	<% } %>
+<% } %>
+			</tr>
+		</cfoutput>
+	<cfelse>
+		<TR><TD colspan="<%= SourceTable.Columns.Count-4%>"><span class="Text">No record(s) Found.</span></TD></TR>
+	</cfif>
+</table>
+
+

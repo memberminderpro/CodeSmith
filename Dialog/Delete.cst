@@ -1,0 +1,81 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Delete.cfm";
+		else
+			return SourceTable.Name + "Delete.cfm";
+	}
+
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+string lookupname	  = "";
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
+	 strSourceTable = strSourceTable.Substring(2);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2013 Infusion Group, LLC. 
+	<%=strSourceTable %>Delete.cfm - Delete <%=strSourceTable %>
+
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../../secure.cfm">
+<cfsetting enablecfoutputonly	= "TRUE" /> 
+<cfsetting showdebugoutput		= "No">
+
+<cfif SESSION.DebugLevel GT 0>
+	<cfsavecontent variable="PageData">
+	<cfdump var="#Form#">
+	</cfsavecontent>
+	<cffile action="WRITE"  file="#ExpandPath(".")#/<%=strSourceTable %>Delete.html"  output="<%=strSourceTable %>Delete:<BR>#PageData#">
+</cfif>
+
+<cftry>
+	<cfparam name="<%=strSourceTable %>ID" 					default="0" 		type="numeric"> 
+ 
+ 	<cfset returnStruct 		= structNew() />
+	<cfset returnStruct.success = TRUE />
+	<cfset returnStruct.error   = "" />
+
+	<!---  
+		Read in current values -- initialize defaults
+	--->
+	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read"   <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Delete" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="RC">
+	<cfif NOT RC>
+		<cfset returnStruct.success = FALSE />
+		<cfset returnStruct.error   = "Could not delete <%=strSourceTable %>" />
+	</cfif>
+
+	<!--- 
+		Return JSON structure
+	 --->		
+	<cfoutput><cfoutput>#serializeJSON(returnStruct)#</cfoutput></cfoutput> 
+	<cfsetting enablecfoutputonly="FALSE" />
+	<cfcatch>
+		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<%=strSourceTable %>ID#" Desc="Error deleting <%=strSourceTable %>: #cfcatch.message#">		
+		<cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Delete.html"  output="<%=strSourceTable %>Delete Error:<BR>#cfcatch.message#<br>#cfcatch.detail#">
+		<cfset returnStruct.error   = "#cfcatch.message#<br>#cfcatch.detail#">
+		<cfset returnStruct.success = FALSE>
+		<cfoutput><cfoutput>#serializeJSON(returnStruct)#</cfoutput></cfoutput> 
+	</cfcatch>
+</cftry>

@@ -1,0 +1,55 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	<!-- #include file="../scripts/string.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
+	 strSourceTable = strSourceTable.Substring(2);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2017 DACdb, LLC.
+	<%=strSourceTable %>_Menu.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cfset Referrer = GetFileFromPath(CGI.HTTP_URL)>							 <!--- Who called --->
+<cfset FileName = ListDeleteAt(Referrer, ListLen(Referrer, "."), ".")>		 <!--- File Name without EXT  --->
+
+<cfoutput>
+<section style="width: 220px" class="noprint">
+	<ul class="sidebar-menu">
+		<li class="header"><%=strSourceTable %> NAVIGATION</li>
+		<li id="Dashboard" class="treeview">
+			<a href="index.cfm"><i class="fa fa-list"></i><span><%=strSourceTable %></span></a>
+		</li>
+		<li id="Report" class="treeview">
+			<a href="Reports.cfm"><i class="fa fa-list"></i><span>Reports</span></a>
+		</li>
+		<li>
+			<a href="help.cfm"><i class="fa fa-book"></i><span>Help</span></a>
+		</li>
+	</ul>
+</section>
+
+</cfoutput>
+

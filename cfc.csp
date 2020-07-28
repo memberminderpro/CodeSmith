@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <defaultTemplate path="Admin\td.cst" />
+  <variables>
+    <add key="ConnectionString1" value="Data Source=DESKTOP-F2VSHC9;Initial Catalog=Rotary;Integrated Security=True" />
+  </variables>
+  <propertySets>
+    <propertySet name="td.cfc">
+      <property name="SourceTable">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+          <owner>dbo</owner>
+          <name>AwardCategory</name>
+        </table>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

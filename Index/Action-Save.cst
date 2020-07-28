@@ -1,0 +1,141 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Save.cfm";
+		else
+			return SourceTable.Name + "Save.cfm";
+	}</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2003-2020 DACdb, LLC. 
+	<%=strSourceTable %>Save.cfm - Save <%=strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+<%-- 
+		<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+			<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+			<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+			<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+			<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,
+		<% } %>
+--%>
+---------------------------------------------------------------------------------------------------->	
+<cfsetting showdebugoutput="no">
+<cfsetting enablecfoutputonly	= "TRUE" />
+<cfinclude template="/secure.cfm"> 
+
+<cfset fDebug = FALSE>
+<cfif fDebug>
+	<cfsavecontent variable="PageData">
+	<cfdump var="#Form#">
+	</cfsavecontent>
+	<cffile action="WRITE"  file="#ExpandPath(".")#/<%=strSourceTable %>Save.html"  output="<%=strSourceTable %>Save:<BR>#PageData#">
+</cfif>
+
+<cftry>
+<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+	<% switch ( SourceTable.Columns[i].NativeType)	%>
+		<% {	%>
+			<% case "bit":		%>
+			<% case "bigint":	%>
+			<% case "int":		%>
+			<% case "numeric":	%>
+			<% case "smallint":	%>
+			<% case "tinyint":	%>
+			<% case "money":	%>
+			<% case "decimal":	%>
+			<% case "float":	%>
+	<cfparam name="FORM.<% =SourceTable.Columns[i].Name %>"				default="0"						type="numeric">
+				<% break; %>
+			<% case "char":		%>
+			<% case "nvarchar":	%>
+			<% case "varchar":	%>
+			<% case "xml":		%>
+	<cfparam name="FORM.<% =SourceTable.Columns[i].Name %>"				default=""						type="string">
+				<% break; %>
+			<% case "date":		%>
+			<% case "datetime":	%>
+			<% case "smalldatetime":	%>
+	<cfparam name="FORM.<% =SourceTable.Columns[i].Name %>"				default="#now()#"				type="date">
+				<% break; %>
+		<% } %>
+<% } %>
+
+ 	<cfset returnStruct 		= structNew() />
+	<cfset returnStruct.success = TRUE />
+	<cfset returnStruct.error   = "" />
+
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+	<% string strColType = column.NativeType;	%>
+	<% switch (strColType)	%>
+		<% {	%>
+			<% case "numeric":	%>
+			<% case "money":	%>
+			<% case "decimal":	%>
+			<% case "float":	%>
+	<cfset FORM.<%= column.Name %>	=	REReplace(FORM.<%= column.Name %>, "[^0-9\.]+", "", "ALL")>
+				<% break; %>
+		<% } %>
+<% } %>
+	<!---  
+		Read in current values -- initialize defaults
+	--->
+	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>" method="init" argumentcollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj">
+		<cfloop Index="theField" list="#FIELDNAMES#">
+			<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
+		</cfloop>
+
+	<cfset FieldNames = "<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].Name == "Modified_By") continue; %><% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %><%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,<% } %>">
+
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && column.ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue;  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   
+		<% if (column.Name == "Modified_By") continue; %>
+		<% if (column.Name == "Modified_Tmstmp") continue; %>
+		<% if (column.Name == "Created_By") continue; %>
+		<% if (column.Name == "Created_Tmstmp") continue; %>
+		<cfinvokeargument name="<%= column.Name %>"		Value="#FORM.<%= column.Name %>#">
+	<% } %>
+	</cfinvoke>
+
+	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<% =SourceTable.Columns[0].Name %>">
+	<cfif <% =SourceTable.Columns[0].Name %> EQ 0>
+		<cfset returnStruct.success = FALSE />
+		<cfset returnStruct.error   = "Could not save <%=strSourceTable %>" />
+	</cfif>
+
+	<!---
+		Return JSON structure
+	--->
+	<cfoutput>#serializeJSON(returnStruct)#</cfoutput>
+	<cfsetting enablecfoutputonly="FALSE" />
+	<cfcatch>
+		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<% =SourceTable.Columns[0].Name %>#" Desc="Error saving <%=strSourceTable %>: #cfcatch.message#">		
+		<cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Save.html"  output="<%=strSourceTable %>Save Error:<BR>#cfcatch.message#<br>#cfcatch.detail#">
+		<cfset returnStruct.error   = "#cfcatch.message#<br>#cfcatch.detail#">
+		<cfset returnStruct.success = FALSE>
+		<cfoutput>#serializeJSON(returnStruct)#</cfoutput>
+	</cfcatch>
+</cftry>

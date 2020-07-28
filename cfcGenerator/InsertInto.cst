@@ -1,0 +1,85 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	<!-- #include file="../scripts/Required.cs" -->
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "DAO.cfc";
+		else
+			return SourceTable.Name + "DAO.cfc";
+	}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+bool fSequence 	= false;
+bool fPositionSort 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+	if (column.Name == "PositionSort") { 
+		fPositionSort = true;
+	} 
+	if (column.Name == "Sequence") { 
+		fSequence = true;
+	} 
+} 
+%>
+
+SET IDENTIY_INSERT [Rotary].[dbo].[<%= SourceTable.Name %>] ON;
+
+<cfquery name="q" datasource="#REQUEST.DSN#">
+
+INSERT INTO [Rotary].[dbo].[<%= SourceTable.Name %>] 
+	(
+		<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+		<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+		<% } %>
+
+	)
+	
+SELECT
+		<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+		S.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
+		<% } %>
+
+FROM  [Rotary244].[dbo].[<%= SourceTable.Name %>] AS S
+
+WHERE  S.<%= SourceTable.Columns[1].Name %> NOT IN (SELECT <%= SourceTable.Columns[1].Name %> FROM [Rotary].[dbo].[<%= SourceTable.Name %>])
+
+</cfquery>
+
+SET IDENTIY_INSERT [Rotary].[dbo].<%= SourceTable.Name %> OFF;
+GO

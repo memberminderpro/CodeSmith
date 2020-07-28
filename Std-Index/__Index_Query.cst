@@ -1,0 +1,76 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	<!-- #include file="../scripts/string.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
+	 strSourceTable = strSourceTable.Substring(2);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2017 DACdb, LLC.
+	<%=strSourceTable %>_Query.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> $ - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../secure.cfm"> 
+<cfsetting showdebugoutput="no">
+
+<cftry>
+	<cfparam name="AccountID" 				default="#Session.AccountID#"							type="numeric">
+	<cfparam name="ClubID" 					default="#Session.ClubID#"								type="numeric">
+	<cfparam name="UserID" 					default="#Session.UserID#"								type="numeric">
+
+	<cfparam name="fChkEnabled"				default="TRUE" 											type="boolean">
+	<cfparam name="TypeID" 					default="0"												type="numeric"> 
+
+	<cfparam name="fExcelWord"				default="FALSE"											type="boolean">
+	<cfparam name="Filter" 					default=""												type="string">
+	<cfparam name="StartRow" 				default="1"												type="numeric">
+	<cfif IsDefined("Client.<%=strSourceTable %>PS") and IsNumeric(Client.<%=strSourceTable %>PS)>
+		<cfparam name="PageSize" 			default="#Client.<%=strSourceTable %>PS#"				type="string">
+	<cfelse>
+		<cfparam name="PageSize"	 		default="100"											type="numeric">
+	</cfif>
+
+	<cfcatch>
+		Error: Contact support. <cfoutput>#cfcatch.detail#<BR>cfdump var="#Form#"></cfoutput>
+		<cfabort> 
+ 	</cfcatch> 
+</cftry>
+
+<!-------------------------------------------------------------------------------------------------
+	Setup the Page variables
+---------------------------------------------------------------------------------------------------->
+
+<cfset start_tick 	= GetTickCount()>
+<cfset "Client.<%=strSourceTable %>PS" = Trim(PageSize)>
+<cfif startrow gt 0 >
+	<cfset startrow = ((startrow-1) * PageSize) + 1 >
+<cfelse>
+	<cfset startrow = 1 >
+</cfif>
+
+<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="List"  returnvariable="Q">
+	<cfinvokeargument name="TypeID"					Value="#TypeID#">
+	<cfinvokeargument name="Filter"					Value="#Filter#">
+	<cfinvokeargument name="SortBy"					Value="<%= SourceTable.Columns[1].Name %>">
+	<cfinvokeargument name="Override"				Value="Y">
+</cfinvoke>
+

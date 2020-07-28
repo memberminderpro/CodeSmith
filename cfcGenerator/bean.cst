@@ -1,0 +1,247 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFPropertyType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/CFInitType.cs" -->
+	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + ".cfc";
+		else
+			return SourceTable.Name + ".cfc";
+	}
+</script>
+<% 
+bool fAccountID = false;
+bool fdFlag 	= false;
+bool fIsActive 	= false;
+bool fOrgYear 	= false;
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 2 && strSourceTable.Substring(0, 2) == "GL") { 
+	 strSourceTable = strSourceTable.Substring(2);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+int col = 0;
+foreach (ColumnSchema column in this.SourceTable.Columns) {  
+	if (column.Name == "AccountID") { 
+		fAccountID = true;
+	}
+	if (column.Name == "dFlag") { 
+		fdFlag = true;
+	} 
+	if (column.Name == "IsActive") { 
+		fIsActive = true;
+	} 
+	if (column.Name == "OrgYear") { 
+		fOrgYear = true;
+	} 
+} 
+%>
+<!--------------------------------------------------------------------------------------------
+	<%= strSourceTable %>.cfc
+
+	* $Revision: $
+	* $Date: <%= DateTime.Now.ToShortDateString() %> $
+---------------------------------------------------------------------------------------------->
+
+<cfcomponent displayname="<%= strSourceTable %>" output="false">
+
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value)  ) continue; %>
+	<cfproperty name="<%= column.Name %>"<%= CFTabName(column.Name) %>Type="<%= CFPropertyType(column) %>"	default="" />
+<% } %>
+
+
+	<!---
+	PROPERTIES
+	--->
+	<cfset variables.instance = StructNew() />
+	<!---
+	INITIALIZATION / CONFIGURATION
+	--->
+
+	<cffunction name="init" access="public" returntype="<%=strSourceTable %>" output="false">
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<%if ( column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value)  ) continue; %>
+		<%if ( CFInitType(column) == "date" ) { %> 
+		<cfargument name="<%= column.Name %>"<%= CFTabName(column.Name) %>	Type="string"	required="false"	default="<%= cfcInitDefault(column) %>"	/>
+		<% } else {%>
+		<cfargument name="<%= column.Name %>"<%= CFTabName(column.Name) %>	Type="<%= CFInitType(column) %>"	required="false"	default="<%= cfcInitDefault(column) %>"	/>
+		<% } %>
+	<% } %>
+	
+		<!--- run setters --->
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<%if ( column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value)  ) continue; %>
+		<cfset set<%= column.Name %>(ARGUMENTS.<%= column.Name %>) />
+	<% } %>
+
+		<cfreturn this />
+	</cffunction>
+
+	<!---
+	PUBLIC FUNCTIONS
+	--->
+	<cffunction name="setMemento" access="public" returntype="<%= strSourceTable %>" output="false">
+		<cfargument name="memento" type="struct" required="yes"/>
+		<cfset variables.instance = arguments.memento />
+		<cfreturn this />
+	</cffunction>
+	<cffunction name="getMemento" access="public" returntype="struct" output="false" >
+		<cfreturn variables.instance />
+	</cffunction>
+
+	<!---
+	VALIDATION FUNCTIONS
+	--->
+	<cffunction name="validate" access="public" returntype="array" output="false">
+		<cfargument name="abort" type="boolean" required="yes"  default="TRUE" />
+
+		<cfset var N 		= 0 />
+		<cfset var errors 	= arrayNew(1) />
+		<cfset var thisError = structNew() />
+
+		<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+			<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value)  ) continue; %>
+			<% switch (column.Name.ToLower() )  %>
+			<% { %>
+				<% case "modified_tmstmp":	%>
+				<% case "modified_by":		%>
+				<% case "created_tmstmp":	%>
+				<% case "created_by":		%>
+				<%		break;				%>
+				<% default:%>
+
+		<!--- <% = column.Name %> --->
+					<% string strColType = column.NativeType;	%>
+					<% switch (strColType)	%>
+						<% {	%>
+							<% case "bigint":	%>
+							<% case "int":		%>
+							<% case "numeric":	%>
+							<% case "smallint":	%>
+							<% case "tinyint":	%>
+		<cfif len(trim( get<%= column.Name %>() )) AND NOT isNumeric(trim( get<%= column.Name %>() ))>
+			<cfset thisError.field = "<%= column.Name %>" />
+			<cfset thisError.type = "invalidType" />
+			<cfset thisError.message = "<%= column.Name %> is not a number" />
+			<cfset arrayAppend(errors,duplicate(thisError)) />
+		</cfif>
+								<% break; %>
+							<% case "decimal":		%>
+							<% case "bit":		%>
+		<cfif len(trim( get<%= column.Name %>() )) AND NOT isBoolean(trim( get<%= column.Name %>() ))>
+			<cfset thisError.field = "<%= column.Name %>" />
+			<cfset thisError.type = "invalidType" />
+			<cfset thisError.message = "<%= column.Name %> is not a boolean" />
+			<cfset arrayAppend(errors,duplicate(thisError)) />
+		</cfif>
+								<% break; %>
+							<% case "float":	%>
+							<% case "money":	%>
+								<% break; %>
+							<% case "char":	%>
+							<% case "nvarchar":	%>
+							<% case "varchar":	%>
+					<% if ( column.Size > 0 ) {%>
+		<cfif len(trim( get<%= column.Name %>() )) AND NOT IsSimpleValue(trim( get<%= column.Name %>() ))>
+			<cfset thisError.field = "<%= column.Name %>" />
+			<cfset thisError.type = "invalidType" />
+			<cfset thisError.message = "<%= column.Name %> is not a string" />
+			<cfset arrayAppend(errors,duplicate(thisError)) />
+		</cfif>
+		<cfif len(trim( get<%= column.Name %>() )) GT <%= column.Size %>>
+			<cfset thisError.field = "<%= column.Name %>" />
+			<cfset thisError.type = "too Long" />
+			<cfset thisError.message = "<%= column.Name %> is too long" />
+			<cfset arrayAppend(errors,duplicate(thisError)) />
+		</cfif>
+					<% } %>
+								<% break; %>
+							<% case "xml":		%>
+								<% break; %>
+							<% case "date":	%>
+							<% case "datetime":	%>
+							<% case "smalldatetime":	%>
+		<cfif len(trim( get<%= column.Name %>() )) AND NOT isDate(trim( get<%= column.Name %>() ))>
+			<cfset thisError.field = "<%= column.Name %>" />
+			<cfset thisError.type = "invalidType" />
+			<cfset thisError.message = "<%= column.Name %> is not a date" />
+			<cfset arrayAppend(errors,duplicate(thisError)) />
+		</cfif>
+								<% break; %>
+							<% default:	%>
+								<% break; %>
+						<% } %>
+				<% break; %>
+			<% } %>
+		<% } %>
+
+		<cfif ARGUMENTS.abort EQ TRUE AND ARGUMENTS.abort and ArrayLen(errors) GT 0>
+			<cfoutput>
+			<h3><%= strSourceTable %> Validation Errors</h3>
+			<table border="1" cellpadding="3" cellspacing="0">
+				<TR>
+					<TH>##</TH>
+					<TH>Field</TH>
+					<TH>Message</TH>
+					<TH>Type</TH>
+				</TR>
+				<cfloop index="N" from="1" to="#ArrayLen(errors)#">
+					<TR>
+						<TD>#N#</TD>
+						<TD>#errors[N].Field#</TD>
+						<TD>#errors[N].Message#</TD>
+						<TD>#errors[N].Type#</TD>
+					</TR>
+				</cfloop>
+			</table>
+			</cfoutput>
+			<cfabort>
+		</cfif>
+		<cfreturn errors />
+	</cffunction>
+
+	<!---
+		PUTS and GETS
+	--->
+	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && ((bool)column.ExtendedProperties["CS_IsComputed"].Value)  ) continue; %>
+
+	<!--- -------------------------------------------------------------------------------------------------
+	<%= column.Name %> -- Get/Set
+	--------------------------------------------------------------------------------------------------- --->
+	<cffunction name="set<%= column.Name %>" access="public" returntype="void" output="false">
+		<cfargument name="<%= column.Name %>" type="string" required="true" />
+			<cfset variables.instance.<%= column.Name %> = ARGUMENTS.<%= column.Name %> />
+	</cffunction>
+
+	<cffunction name="get<%= column.Name %>" access="public" returntype="string" output="false">
+		<cfreturn variables.instance.<%= column.Name %> />
+	</cffunction>
+
+	<% } %>
+
+	<!--- -------------------------------------------------------------------------------------------------
+	DUMP
+	--------------------------------------------------------------------------------------------------- --->
+	<cffunction name="dump" access="public" output="true" return="void">
+		<cfargument	name="abort"	type="boolean"	default="false" />
+		<cfdump var="#variables.instance#" />
+		<cfif arguments.abort>
+			<cfabort />
+		</cfif>
+	</cffunction>
+
+</cfcomponent>

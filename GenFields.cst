@@ -1,0 +1,30 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+
+<%=strSourceTable %>
+
+
+<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+		<%= SourceTable.Columns.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < 1) %>, 
+
+
+	<TR>
+		<TD width="140" class="TDGreyR"><cfif ListFind(RequiredFields, "<%= SourceTable.Name %>")><span class="req">*</span></cfif>Billing Address1:&nbsp;</TD>
+		<TD class="TDData"><input type="Text" name="<%= SourceTable.Name %>" value="#<%=strSourceTable %>.<%= SourceTable.Name %>#"  size="<%= SourceTable.Columns.Size %>"  maxlength="<%= SourceTable.Columns.Size %>"  class="TxtIn" onkeypress="return noEnter(event);"></TD>		
+	</TR>
+
+<% } %>
+<%= SourceTable.Name %>
+
+

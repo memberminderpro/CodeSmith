@@ -1,0 +1,273 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+string lookupname	  = "";
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2010-2016 DACdb, LLC.
+	<%=strSourceTable %>.cfm
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfinclude template="../../secure.cfm"> 
+<cfsetting showdebugoutput="No">
+
+
+<cfoutput>
+<table border="0" cellpadding="2" cellspacing="2" width="100%">
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+	<% if( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   <%-- Don't generate Identity field --%>
+	<% if ( column.Name == "AccountID") continue; %>
+	<% if ( column.Name == "ClubID") continue; %>
+	<% if ( column.Name == "Created_By") continue; %>
+	<% if ( column.Name == "Created_Tmstmp") continue; %>
+	<% if ( column.Name == "Modified_By") continue; %>
+	<% if ( column.Name == "Modified_Tmstmp") continue; %>
+
+
+		<% if ( column.Name.Substring(0,2) == "Is" && column.Size == 1) {%>
+
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>"	name="<%= column.Name %>"	class="<%= InputStyle(column) %>"	<% if ( column.AllowDBNull == false) {%> required <% } %>>
+							<option value="N" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "N"> selected </cfif> > No </option>
+							<option value="Y" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "Y"> selected </cfif> > Yes </option>
+						</select>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			<cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<cfswitch expression="#<%= column.Name %>#">
+							<cfloop query="q<%= lookupname %>">
+								<cfcase value="N" <cfif <%= column.Name %>"> <%= lookupname %> EQ "N"> No  </value>
+								<cfcase value="Y" <cfif <%= column.Name %>"> <%= lookupname %> EQ "Y"> Yes </value>
+							</cfloop>
+						</cfswitch>
+					</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+
+<% } else if ( column.Name == "dFlag") {%>
+
+
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>"	name="<%= column.Name %>"	class="<%= InputStyle(column) %>">
+							<option value="N" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "N"> selected </cfif> > No </option>
+							<option value="Y" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "Y"> selected </cfif> > Yes </option>
+						</select>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			<cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<cfswitch expression="#<%= column.Name %>#">
+							<cfloop query="q<%= lookupname %>">
+								<cfcase value="N" <cfif <%= column.Name %>"> <%= lookupname %> EQ "N"> No  </value>
+								<cfcase value="Y" <cfif <%= column.Name %>"> <%= lookupname %> EQ "Y"> Yes </value>
+							</cfloop>
+						</cfswitch>
+					</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+		<% } else if ( column.Name == "Gender" ) {%>
+		
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>"	name="<%= column.Name %>"	class="<%= InputStyle(column) %>">
+							<option value=""  <cfif <%=strSourceTable %>.<%= column.Name %> EQ ""> selected </cfif>>  {Select} </option>
+							<option value="M" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "M"> selected </cfif> > Male </option>
+							<option value="F" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "F"> selected </cfif> > Female </option>
+							<option value="?" <cfif <%=strSourceTable %>.<%= column.Name %> EQ "?"> selected </cfif> > Not Given </option>
+						</select>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			<cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<cfswitch expression="#<%= column.Name %>#">
+							<cfloop query="q<%= lookupname %>">
+								<cfcase value="N" <cfif <%= column.Name %>"> <%= lookupname %> EQ "N"> No        </value>
+								<cfcase value="Y" <cfif <%= column.Name %>"> <%= lookupname %> EQ "Y"> Yes       </value>
+								<cfcase value="?" <cfif <%= column.Name %>"> <%= lookupname %> EQ "?"> Not Given </value>
+								<cfdefaultcase> Not Given </cfdefaultcase>
+							</cfloop>
+						</cfswitch>
+					</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+		<% } else if ( column.Name.IndexOf("StateCode") != -1) { %>
+		
+		<cfif ListFind(ViewFields, XXX)>
+			<cfinvoke component="#APPLICATION.DIR#CFC\StateCodeDAO"	method="Pick"	returnvariable="qStateCode">
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>"	name="<%= column.Name %>"	class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
+							<option value="">Select one...</option>
+							<cfloop query="qStateCode">
+								<option value="#StateCode#" <cfif StateCode EQ <%=strSourceTable %>.<%= column.Name %>>selected</cfif>>#StateName#</option>
+							</cfloop>
+						</select>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			</cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><%= SplitCamelCase(column.Name) %>: &nbsp;</TD>
+					<TD class="TDData">#<%=strSourceTable %>.<%= column.Name %>#</TD>
+				</TR>
+			</cfif>
+		</cfif>
+		
+	<% } else if ( column.Name.IndexOf("CountryCode") != -1) { %>
+
+		<cfif ListFind(ViewFields, XXX)>
+			<cfinvoke component="#APPLICATION.DIR#CFC\CountryCodeDAO"	method="Pick"	returnvariable="qCountryCode">
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>"	name="<%= column.Name %>"	class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
+							<option value="">Select one...</option>
+							<cfloop query="qCountryCode">
+								<option value="#CountryCode#" <cfif CountryCode EQ <%=strSourceTable %>.<%= column.Name %>>selected</cfif>>#CountryName#</option>
+							</cfloop>
+						</select>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+			</cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><%= SplitCamelCase(column.Name) %>: &nbsp;</TD>
+					<TD class="TDData">
+						<cfswitch expression="##">
+							<cfloop query="q<%= lookupname %>">
+								<cfcase value="<%= column.Name %>"> <%= lookupname %> </value>
+							</cfloop>
+						</cfswitch>
+					</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+	<% } else if ( column.Size < 0 ) {%>
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<textarea id="<%= column.Name %>"	name="<%= column.Name %>"	<%= InputSize(column) %>	class="<%= InputStyle(column) %>"	onkeypress="return noEnter();">#<%=strSourceTable %>.<%= column.Name %>#</textarea>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			</cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><%= SplitCamelCase(column.Name) %>: &nbsp;</TD>
+					<TD class="TDData">#<%=strSourceTable %>.<%= column.Name %>#</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+	<% } else if ( column.Name.Substring( column.Name.Length-2) == "ID" ) {%>
+
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+				<% lookupname = column.Name.Substring( 0, column.Name.Length-2); %>
+				<cfinvoke component="#APPLICATION.DIR#CFC\<%= lookupname %>DAO"		method="Pick"	returnvariable="q<%= lookupname %>">
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<select id="<%= column.Name %>" name="<%= column.Name %>"	class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
+							<option value="">Select one...</option>
+							<cfloop query="q<%= lookupname %>">
+								<option value="#<%= column.Name %>#" <cfif <%= column.Name %> EQ <%=strSourceTable %>.<%= column.Name %>> selected </cfif>>#<%= lookupname %>#</option>
+							</cfloop>
+						</select>
+					</TD>
+				</TR>
+			<cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"><%= SplitCamelCase(column.Name) %>: &nbsp;</TD>
+					<TD class="TDData">
+						<cfswitch expression="##">
+							<cfloop query="q<%= lookupname %>">
+								<cfcase value="<%= column.Name %>"> <%= lookupname %> </value>
+							</cfloop>
+						</cfswitch>
+					</TD>
+				</TR>
+			</cfif>
+		</cfif>
+			
+	<% } else { %>
+		
+		<cfif ListFind(ViewFields, XXX)>
+			<cfif ListFind(EditFields, XXX)>
+				<TR>
+					<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><cfif ListFindNoCase(RequiredFields, "<%= column.Name %>")><span class="required">*</span></cfif><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+					<TD class="TDData">
+						<% if ( CFType(column) == "date") {%>
+						<input id="<%= column.Name %>" type="Text" name="<%= column.Name %>"	value="#DateFormat(<%=strSourceTable %>.<%= column.Name %>,'mm/dd/yyyy')#"	<%= InputSize(column) %>	class="<%= InputStyle(column) %> Date"	<%= InputJS(column) %>>
+						<% } else if ( column.NativeType == "money" || column.NativeType == "decimal" || column.NativeType == "float") {%>
+						<input id="<%= column.Name %>" type="Text" name="<%= column.Name %>"	value="#DecimalFormat(<%=strSourceTable %>.<%= column.Name %>)#"	<%= InputSize(column) %>	class="<%= InputStyle(column) %> DecimalFormat"	<%= InputJS(column) %>>
+						<% } else if ( column.NativeType == "bigint" || column.NativeType == "int" || column.NativeType == "numeric") {%>
+						<input id="<%= column.Name %>" type="Text" name="<%= column.Name %>"	value="#NumberFormat(<%=strSourceTable %>.<%= column.Name %>, '9,999')#"	<%= InputSize(column) %>	class="<%= InputStyle(column) %> MinZero"	<%= InputJS(column) %>>
+						<% } else {%>
+						<input id="<%= column.Name %>" type="Text" name="<%= column.Name %>"	value="#<%=strSourceTable %>.<%= column.Name %>#"	<%= InputSize(column) %>	class="<%= InputStyle(column) %>"	<%= InputJS(column) %>	<% if ( column.AllowDBNull == false){%> required <% } %>>
+						<% } %>
+						<span id="invalid-<%= column.Name %>" ></span> <span class="small"></span>
+					</TD>
+				</TR>
+			<cfelse>
+				<TR>
+					<TD width="150" class="TDLabel"> <%= SplitCamelCase(column.Name) %>: &nbsp;</TD>
+					<TD class="TDData">#<%=strSourceTable %>.<%= column.Name %>#</TD>
+				</TR>
+			</cfif>
+		</cfif>
+
+	<% } %>
+<% } %>
+</table>
+</cfoutput>

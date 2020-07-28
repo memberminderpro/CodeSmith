@@ -1,0 +1,169 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+
+<!-------------------------------------------------------------------------------------------------
+	<%=strSourceTable %>.cfm - <%=strSourceTable %> listing
+	
+	Modifications:
+	12-31-2010 - Recoded for JSON
+---------------------------------------------------------------------------------------------------->
+<cfsilent>
+<cfsetting showdebugoutput		= "No">
+<cfsetting enableCFoutputOnly	= "Yes">
+</cfsilent>
+
+<cftry>
+	<cfparam name="D" 					default="0"					 				type="String">
+	<cfparam name="AccountID" 			default="#D#"				 				type="Numeric">
+	<cfparam name="ID" 					default="0"									type="Numeric">
+	<cfparam name="ClubID" 				default="#ID#"								type="Numeric">
+
+	<cfparam name="XSLTemplate"			default="Default.xsl"						type="String">
+	<cfparam name="xsl"					default="#XSLTemplate#"						type="String">
+	<cfparam name="xsldir" 				default="<%=strSourceTable %>sXSL/"					type="String">
+
+	<cfparam name="MemberTypeIDs"		default=""									type="String">
+	<cfparam name="Callback" 			default="" 									type="String">
+
+	<cfparam name="SortBy" 				default="Leaders"							type="String">
+
+	<cfcatch>
+		<h3>Contact Support</h3>
+		<cfabort>
+	</cfcatch>
+</cftry>
+
+<cfif Len(AccountID) EQ 0>	<cf_Problem Message="No AccountID defined">	</cfif>
+<cfif Len(ClubID) EQ 0>		<cf_Problem Message="No ClubID defined">	</cfif>
+
+<!--- 
+	Check for user defined XSL
+ --->
+<cfif IsDefined("URL.xsl")>
+	<cfif URL.xsl EQ "xmlonly">					<!--- Just stream XML to user --->
+		<cfset xsl = "xmlonly">
+	<cfelse>
+		<cfif FindNoCase("http:", URL.xsl, 1)>	<!--- Has an external xsl page been defined? --->
+			<cfset xsl = "#URL.xsl#">
+		<cfelse>
+			<cfset xsl = "#xsldir##URL.xsl#">	<!--- If not external, set to the defined internal xsl --->
+		</cfif>
+	</cfif>
+<cfelse>
+	<cfset xsl = "#xsldir##xsl#">
+</cfif>
+
+<cfset thisMember	= StructNew() />  
+<cfset Members		= arrayNew(1) />
+
+<!--- 
+	Run Report 
+ --->
+<cfinvoke component="#APPLICATION.DIR#cfc\<%=strSourceTable %>DAO"	method="<%=strSourceTable %>" returnvariable="Q">
+	<cfinvokeargument name="AccountID"			Value="#AccountID#">
+	<cfinvokeargument name="ClubID"				Value="#ClubID#">
+	<cfinvokeargument name="MemberTypeIDs"		Value="#MemberTypeIDs#">
+	<cfinvokeargument name="SortBy"				Value="#SortBy#">
+</cfinvoke>		
+
+<cfloop query="Q">
+	<cfset temp = queryAddRow(Q)>
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+	<cfset thisMember.<%= column.Name %>			= <%= column.Name %> /> 
+<% } %>
+	<cfset arrayAppend(Members, duplicate(thisMember)) />
+</cfloop>
+
+<!---
+<cfdump var="#Q#">
+<cfabort>
+--->
+
+<cfif Len(callback) GT 0 AND NOT IsDefined("URL.xsl")>
+	
+	<cfoutput><cfoutput>#Callback#([#serializeJSON(Members)#]);</cfoutput></cfoutput>
+
+<cfelseif Len(callback) GT 0 AND IsDefined("xsl") AND Len(xsl) GT 0>
+
+	<cfscript>
+		myParams = StructNew();
+		StructInsert(myParams, "ApplURL",			SESSION.ApplURL);
+		StructInsert(myParams, "AccountLabel",		SESSION.AccountLabel);
+		StructInsert(myParams, "Title", 			UCASE(Q.ClubName));
+		StructInsert(myParams, "ClubURL",			ClubQ.ClubURL);
+		StructInsert(myParams, "AccountID",			ClubQ.AccountID);
+		StructInsert(myParams, "ClubID",			ClubQ.ClubID);
+		StructInsert(myParams, "SubTitle", 			"<%=strSourceTable %>");
+		StructInsert(myParams, "Today", 			DateFormat(now(),'mmm dd, yyyy'));
+		StructInsert(myParams, "LogoL",				LogoL);
+		StructInsert(myParams, "LogoR",				LogoR);
+		StructInsert(myParams, "BGC",				BGC);
+		StructInsert(myParams, "BGI",				BGI);
+	</cfscript>
+
+	<cfset View_XML = APPLICATION.toXML.arrayStructToXML(Members, "MEMBERS", "MEMBER") />
+	
+	<cftry>
+		<cfset xmlOutput = XMLTransform(tostring(View_XML), "#xsl#", myParams)>
+		<cfcatch>
+			<cfoutput><h3>Contact Support - XML rendering</h3></cfoutput>
+			<cfabort>
+		</cfcatch>
+	</cftry>
+	<cfsavecontent variable="PageData">
+		<cfoutput>#xmlOutput#</cfoutput>
+	</cfsavecontent>
+
+	<cfset respMsg["text"] = PageData>
+	<cfoutput>#Callback#(#serializeJSON(respMsg)#)</cfoutput>
+
+<cfelseif Len(xsl) GT 0>
+	<cfif xsl EQ "xmlonly">		<!--- Just stream XML to user --->
+	
+		<cfset View_XML = APPLICATION.toXML.arrayStructToXML(Members, "MEMBERS", "MEMBER") />
+		<cfoutput>#View_XML#</cfoutput>
+	
+	<cfelse>
+
+		<cfscript>
+			myParams = StructNew();
+			StructInsert(myParams, "ApplURL",			SESSION.ApplURL);
+			StructInsert(myParams, "AccountLabel",		SESSION.AccountLabel);
+			StructInsert(myParams, "Title", 			UCASE(Q.ClubName));
+			StructInsert(myParams, "ClubURL",			ClubQ.ClubURL);
+			StructInsert(myParams, "AccountID",			ClubQ.AccountID);
+			StructInsert(myParams, "ClubID",			ClubQ.ClubID);
+			StructInsert(myParams, "SubTitle", 			"<%=strSourceTable %>");
+			StructInsert(myParams, "Today", 			DateFormat(now(),'mmm dd, yyyy'));
+			StructInsert(myParams, "LogoL",				LogoL);
+			StructInsert(myParams, "LogoR",				LogoR);
+			StructInsert(myParams, "BGC",				BGC);
+			StructInsert(myParams, "BGI",				BGI);
+		</cfscript>
+
+		<cfset View_XML = APPLICATION.toXML.arrayStructToXML(Members, "MEMBERS", "MEMBER") />
+		<cfset xmlOutput = XMLTransform(tostring(View_XML), "#xsl#", myParams)>
+		<cftry>
+			<cfcatch>
+				<h3>Contact Support - XML rendering</h3>
+				<cfabort>
+			</cfcatch>
+		</cftry>
+		<cfoutput>#xmlOutput#</cfoutput>
+
+	</cfif>
+	
+<cfelse>
+	<cfdump var="#Members#">
+</cfif>

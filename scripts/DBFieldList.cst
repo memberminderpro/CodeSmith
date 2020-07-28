@@ -1,0 +1,26 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+
+
+<script runat="template">
+	<!-- #include file="../scripts/s.cs" -->
+</script>
+
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+
+<%=strSourceTable %>
+
+<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
+<%= column.Name %> == <%= column.NativeType %>, <%= SampleMethod(column.NativeType) %>
+<% } %>
+
+
