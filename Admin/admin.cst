@@ -50,7 +50,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 } 
 %>
 <!--------------------------------------------------------------------------------------
-	Copyright(c) 2003-2018 DACdb, LLC.
+	Copyright(c) 2003-2020 DACdb, LLC.
 	<%= strSourceTable %>.cfm - 
 
 	Modifications:
@@ -201,10 +201,10 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<input type="hidden"	name="ClubID"					value="#ClubID#"				id="ClubID">
 
 		<!--- Content Header (Page header) and breadcrumb --->
-		<section class="content" style="padding: 8px 0 8px 0;">
-			<div class="container-fluid">
+		<section class="content noprint" style="padding: 8px 0 8px 0;">
+			<div class="row">
 				<div class="col-md-8">
-					<h1 class="h1">Admin: <cfoutput><strong><%= strSourceTable %></strong></cfoutput></h1>
+					<h1 class="h1">><%= strSourceTable %> Admin:  <strong><cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
 				</div>
 				<div class="col-md-4">
 					<button type="button" class="btn btn-light btn-sm	 	pull-right noprint" id="config" Title="Configure" 		Alt="Configure">		<i class="fal fa-cog fa-lg fa-sm"></i></button>
@@ -213,8 +213,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			</div>
 		</section>
 
-		<section class="content content-buttons" style="border-bottom: 1px solid ##dcdcdc; padding: 8px 0 8px 0; margin-bottom: 12px;">
-			<div class="container-fluid">
+		<section class="content content-buttons noprint" style="border-bottom: 1px solid ##dcdcdc;">
+			<div class="row">
 				<div class="col-md-8 col-xs-12">
 					Add, Edit or Delete <%= strSourceTable %>.<BR>
 					Drag and Drop the <%= strSourceTable %> up or down on the list to sort.
@@ -251,12 +251,12 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<img src="../images/exclaim.gif" alt="Warning!" style="margin: 0px 5px 0px 10px;" />
 					<span></span><br clear="all"/>
 				</div>	<!--- /validation --->
-			</div>	<!--- container-fluid ---->
+			</div>	<!--- row ---->
 		</section>
 
 		<!-- Main content -->
 		<section class="content">
-			<div class="container-fluid">
+			<div class="row">
 				<div class="col-md-12">
 
 
@@ -275,7 +275,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 
 				</div>	<!--- /col-md-12 --->
-			</div>	<!--- /container-fluid --->
+			</div>	<!--- /row --->
 		</section>	<!--- /content --->
 
 	</form>
@@ -285,7 +285,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!-------------------------------------------------------------------------------------------------
 	Popup DIVs
 ---------------------------------------------------------------------------------------------------->
-<div id="hidecontain" style="display: none;">
+<div id="hidecontain">
 	<div id="programwrap" title="Setup">
 		<form class="programform">
 			No setup parameters are defined at this time.
@@ -300,7 +300,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!-------------------------------------------------------------------------------------------------
 	Local Javascript Functions
 ---------------------------------------------------------------------------------------------------->
-<!--- <script>document.write('<scr'+'ipt src="js/<%=strSourceTable %>.js?'+Math.random()+'" type="text/javascript"></scr'+'ipt>');</script> --->
+<!--- <script type="text/javascript" src="js/<%=strSourceTable %>.js?<cfoutput>#Rand()#</cfoutput>" type="text/javascript"></script> ---
 <script type="text/javascript">
 var today = new Date();
 var pagenum = 1;
@@ -339,6 +339,8 @@ function InitializePage() {
 
 	$('#Save').on('click', function() {
 		// add validation here
+		$(this).attr("disabled", true);		// disable the button
+		$(this).val("Sending...");		//change the button text
 		$('#Submit').val( "Save");
 		$('#form').submit();
 	});
