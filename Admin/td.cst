@@ -4,9 +4,12 @@
 <%@ Assembly Name="SchemaExplorer" %>
 <%@ Assembly Name="System.Design" %>
 <%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Text.RegularExpressions" %>
 <script runat="template">
 <!-- #include file="../scripts/CFType.cs" -->
 <!-- #include file="../scripts/cfcInitDefault.cs" -->
+<!-- #include file="../scripts/CFDefault.cs" -->
+<!-- #include file="../scripts/SplitCamelCase.cs" -->
 public override string GetFileName() {
 	return "TD.cfm";
 }

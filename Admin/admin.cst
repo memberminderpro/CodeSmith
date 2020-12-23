@@ -7,6 +7,7 @@
 <script runat="template">
 <!-- #include file="../scripts/CFType.cs" -->
 <!-- #include file="../scripts/cfcInitDefault.cs" -->
+<!-- #include file="../scripts/SplitCamelCase.cs" -->
 public override string GetFileName() {
 	string strSourceTable = SourceTable.Name;
 	if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
@@ -59,7 +60,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <cfsetting showdebugoutput="No">
 
 <!---
-<cfinclude template="../cfscript/profile.cfm">
+<cfinclude template="/cfscript/profile.cfm">
 <div style="margin-left: 200px">
 <cfdump var="#Form#">
 <cfdump var="#URL#">
@@ -109,8 +110,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 <% } %>
 
-<cfset <%= strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%= strSourceTable %>").init( argumentCollection = FORM ) />
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>DAO" method="Create" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
+	<cfset <%= strSourceTable %>Obj = createObject("component", "\CFC\<%= strSourceTable %>").init( argumentCollection = FORM ) />
+	<cfinvoke component="\CFC\<%= strSourceTable %>DAO" method="Create" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
 	<cfif RC EQ 0>
 		<cfset strMsg = "Error adding this record">
 	</cfif>
@@ -144,7 +145,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 <% } %>
 
-				<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>" method="init" returnvariable="<%= strSourceTable %>Obj">
+				<cfinvoke component="\CFC\<%= strSourceTable %>" method="init" returnvariable="<%= strSourceTable %>Obj">
 <% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 	<%  switch (column.Name.ToLower() )  %>
 	<% { %>
@@ -161,7 +162,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 <% } %>
 				</cfinvoke>
-				<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>DAO" method="Update" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
+				<cfinvoke component="\CFC\<%= strSourceTable %>DAO" method="Update" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
 			</cfif>
 		</cfloop>
 	</cfif>
@@ -173,8 +174,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<cfset N = ListGetAt(LineItem, I)>
 			<cfif IsDefined("Chk_#N#")>
 				<cfset <%= SourceTable.Columns[0].Name %>	= FORM["<%= SourceTable.Columns[0].Name %>_" & #N#]>
-				<cfset <%= strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%= strSourceTable %>").init( <%= SourceTable.Columns[0].Name %> = <%= SourceTable.Columns[0].Name %> ) />
-				<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>DAO" method="Delete" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
+				<cfset <%= strSourceTable %>Obj = createObject("component", "\CFC\<%= strSourceTable %>").init( <%= SourceTable.Columns[0].Name %> = <%= SourceTable.Columns[0].Name %> ) />
+				<cfinvoke component="\CFC\<%= strSourceTable %>DAO" method="Delete" <%= strSourceTable %>="#<%= strSourceTable %>Obj#" returnvariable="RC">
 			</cfif>
 		</cfloop>
 	</cfif>
@@ -189,7 +190,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	Display Page
 ---------------------------------------------------------------------------------------------------->
 <cfset ModuleInc = "Validate,BS4,JS4,TableSort,TableSortWidgets">
-<cf_StdHeader Menu="#ReplaceNoCase(CGI.SCRIPT_NAME, GetFileFromPath(CGI.SCRIPT_NAME),"")#Index_Menu.cfm" Legacy="TRUE" ClubID="#ClubID#" Include="#ModuleInc#">
+<cf_StdHeader Menu="/Admin/Index_Menu.cfm" Legacy="TRUE" Include="#ModuleInc#">
 	<!--- Add custom page styles here. --->
 </cf_StdHeader>
 
@@ -204,7 +205,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<section class="content noprint" style="padding: 8px 0 8px 0;">
 			<div class="row">
 				<div class="col-md-8">
-					<h1 class="h1">><%= strSourceTable %> Admin:  <strong><cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
+					<h1 class="h1"><%= SplitCamelCase(strSourceTable) %> Admin:  <strong><cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
 				</div>
 				<div class="col-md-4">
 					<button type="button" class="btn btn-light btn-sm	 	pull-right noprint" id="config" Title="Configure" 		Alt="Configure">		<i class="fal fa-cog fa-lg fa-sm"></i></button>
@@ -216,8 +217,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<section class="content content-buttons noprint" style="border-bottom: 1px solid ##dcdcdc;">
 			<div class="row">
 				<div class="col-md-8 col-xs-12">
-					Add, Edit or Delete <%= strSourceTable %>.<BR>
-					Drag and Drop the <%= strSourceTable %> up or down on the list to sort.
+					Add, Edit or Delete <%= SplitCamelCase(strSourceTable) %>.<BR>
+					Drag and Drop the <%= SplitCamelCase(strSourceTable) %> up or down on the list to sort.
 				</div>	<!--- /col-md-8 col-xs-12 --->
 				<div class="col-md-4 col-xs-12 text-right">
 
@@ -225,21 +226,21 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 						<cfswitch expression="#Action#">
 							<cfcase value="V">
-								<button	type="button" class="btn btn-danger    pull-right"	id="Add">	Add</button>
-								<button	type="button" class="btn btn-secondary pull-right"	id="Edit">	Edit</button>
-								<button	type="button" class="btn btn-primary   pull-right"	id="Delete">Delete</button>
+								<button	type="button" class="btn btn-primary btn-sm   pull-right"	id="Delete">Delete</button>
+								<button	type="button" class="btn btn-secondary btn-sm pull-right"	id="Edit">	Edit</button>
+								<button	type="button" class="btn btn-danger btn-sm    pull-right"	id="Add">	Add</button>
 							</cfcase>
 							<cfcase value="A">
-								<button	type="submit" class="btn btn-success  pull-right" Name="Add"	id="AddRec">	Add</button>
-								<button	type="button" class="btn btn-danger   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Add"	id="AddRec">	Add</button>
 							</cfcase>
 							<cfcase value="E">
-								<button	type="submit" class="btn btn-success  pull-right" Name="Update"	id="UpdateRec">	Update</button>
-								<button	type="button" class="btn btn-danger   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Update"	id="UpdateRec">	Update</button>
 							</cfcase>
 							<cfcase value="D">
-								<button	type="submit" class="btn btn-success  pull-right" Name="Delete"	id="DeleteRec">	Delete</button>
-								<button	type="button" class="btn btn-danger   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Delete"	id="DeleteRec">	Delete</button>
 							</cfcase>
 						</cfswitch>
 
@@ -248,7 +249,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 				<!---	Validation Error --->
 				<div align="center" class="error" style="display:none; margin-top: 10px; margin-bottom: 10px">
-					<img src="../images/exclaim.gif" alt="Warning!" style="margin: 0px 5px 0px 10px;" />
+					<img src="/images/exclaim.gif" alt="Warning!" style="margin: 0px 5px 0px 10px;" />
 					<span></span><br clear="all"/>
 				</div>	<!--- /validation --->
 			</div>	<!--- row ---->
@@ -259,8 +260,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<div class="row">
 				<div class="col-md-12">
 
-
-<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>DAO" method="View" returnvariable="Q">
+<cfinvoke component="\CFC\<%= strSourceTable %>DAO" method="View" returnvariable="Q">
 	<cfinvokeargument name="AccountID"				Value="#AccountID#">
 	<cfinvokeargument name="Override"				Value="Y">
 	<cfinvokeargument name="SortBy"					Value="Sequence">		<!--- Position Sort --->
@@ -272,7 +272,6 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<cfcase value="E">  <cfinclude template="<%= strSourceTable %>/Edit.cfm">  </cfcase>
 	<cfcase value="D">  <cfinclude template="<%= strSourceTable %>/Del.cfm">   </cfcase>
 </cfswitch>
-
 
 				</div>	<!--- /col-md-12 --->
 			</div>	<!--- /row --->
@@ -300,7 +299,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!-------------------------------------------------------------------------------------------------
 	Local Javascript Functions
 ---------------------------------------------------------------------------------------------------->
-<!--- <script type="text/javascript" src="js/<%=strSourceTable %>.js?<cfoutput>#Rand()#</cfoutput>" type="text/javascript"></script> ---
+<!--- <script type="text/javascript" src="js/<%=strSourceTable %>.js?<cfoutput>#Rand()#</cfoutput>" type="text/javascript"></script> --->
 <script type="text/javascript">
 var today = new Date();
 var pagenum = 1;
@@ -395,7 +394,7 @@ function ReBind() {
 
 	$( ".Date" ).datepicker({
 		showOn: 'both',
-		buttonImage : '../images/tcal/cal.gif',
+		buttonImage : '/images/tcal/cal.gif',
 		buttonText : 'Click Calendar',
 		numberOfMonths: 1
 	});

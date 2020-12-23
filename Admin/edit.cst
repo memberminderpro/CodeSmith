@@ -9,6 +9,7 @@
 <!-- #include file="../scripts/CFType.cs" -->
 <!-- #include file="../scripts/cfcInitDefault.cs" -->
 <!-- #include file="../scripts/CFDefault.cs" -->
+<!-- #include file="../scripts/SplitCamelCase.cs" -->
 public override string GetFileName() {
 	return "Edit.cfm";
 }
@@ -50,7 +51,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 <cfset N = 0>
 <div class="tablewrapper">
-<div class="tabletitle"><%= strSourceTable %></div>
+<div class="tabletitle"><%= SplitCamelCase(strSourceTable) %></div>
 <table border="0" cellpadding="0" cellspacing="0" class="tablesorter hasStickyHeaders" width="100%">
 	<THEAD>
 	<TR>
@@ -89,10 +90,19 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<% break; %>
 		<% case "accountid":		%>
 			<input type="Hidden" name="AccountID_#N#" 		value="#Q.AccountID#">
-
 			<% break; %>
 		<% case "orgyear":		%>
 			<% break; %>
+		<% case "securitylevel":		%>
+			<cfinvoke component="#APPLICATION.DIR#cfc\RoleDAO" method="View" returnvariable="UserRoleQ">  <!--- Maybe move to the top? --->
+			<cfset SL = SecurityLevel>
+			<select name="SecurityLevely_#N#" class="TxtIn" onChange="checkRow('#N#');">
+				<cfloop query="UserRoleQ">
+					<option value="#SecurityLevel#" <cfif SL EQ SecurityLevel> selected </cfif>>#SecurityLevel#-#Evaluate(DE(UserRole))#</option>
+				</cfloop>
+			</select>
+			<% break; %>
+
 		<% default:%>
 			<% string strColType = column.NativeType;	%>
 			<% switch (strColType)	%>
@@ -117,9 +127,9 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<% case "char":		%>
 				<% if ( column.Size == 1 ) { %>
 				<TD class="TableCellC">
-				<input type="checkbox"	name="<%= column.Name %>_#N#"		value="Y"	<cfif Q.<%= column.Name %> EQ "Y"> checked </cfif> class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);">
+					<input type="checkbox"	name="<%= column.Name %>_#N#"		value="Y"	<cfif Q.<%= column.Name %> EQ "Y"> checked </cfif> class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);">
 				-- or --
-				<select id="<%= column.Name %>_#N#" name="<%= column.Name %>_#N#" class="TxtIn"	onChange="checkRow('#N#');">
+					<select id="<%= column.Name %>_#N#" name="<%= column.Name %>_#N#" class="TxtIn"	onChange="checkRow('#N#');">
 						<option value="N" <cfif Q.<%= column.Name %> EQ "N"> selected </cfif>>No	</option>
 						<option value="Y" <cfif Q.<%= column.Name %> EQ "Y"> selected </cfif>>Yes</option>
 					</select>
@@ -157,5 +167,5 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<TR><TD colspan="<%= SourceTable.Columns.Count-4%>"><span class="Text">No record(s) Found.</span></TD></TR>
 	</cfif>
 </table>
-
+</div>
 

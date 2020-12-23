@@ -39,13 +39,14 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 <cfinclude template="/secure.cfm"> 
 <cfinclude template="/cfscript/profile.cfm">
 
+<cfset fDebug = TRUE>
 <cftry>
 	<cfparam name="<%= SourceTable.Columns[0].Name %>" 		default="0" 			type="numeric">
 
-	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
 
-	<cfif SESSION.DebugLevel GT 0><cfoutput><%= SourceTable.Columns[0].Name %>=#<%= SourceTable.Columns[0].Name %>#<BR></cfoutput></cfif>
+	<cfif fDebug><cfoutput><%= SourceTable.Columns[0].Name %>=#<%= SourceTable.Columns[0].Name %>#<BR></cfoutput></cfif>
 	<cfoutput>
 	<form id="<%=strSourceTable %>Form" name="<%=strSourceTable %>Form">
 		<input type="hidden" 	name="<%= SourceTable.Columns[0].Name %>" 	value="#<%= SourceTable.Columns[0].Name %>#">
@@ -88,7 +89,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 				</TD>
 				<% } else if ( column.Name.IndexOf("StateCode") != -1) { %>
 				<TD class="TDData">
-					<cfinvoke component="#APPLICATION.DIR#CFC\StateCodeDAO"	method="Pick"	returnvariable="qStateCode">
+					<cfinvoke component="\CFC\StateCodeDAO"	method="Pick"	returnvariable="qStateCode">
 					<select id="<%= column.Name %>" name="<%= column.Name %>" class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
 						<option value="">Select one...</option>
 						<cfloop query="qStateCode">
@@ -99,7 +100,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 				</TD>
 				<% } else if ( column.Name.IndexOf("CountryCode") != -1) { %>
 				<TD class="TDData">
-					<cfinvoke component="#APPLICATION.DIR#CFC\CountryCodeDAO"	method="Pick"	returnvariable="qCountryCode">
+					<cfinvoke component="\CFC\CountryCodeDAO"	method="Pick"	returnvariable="qCountryCode">
 					<select id="<%= column.Name %>" name="<%= column.Name %>" class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
 						<option value="">Select one...</option>
 						<cfloop query="qCountryCode">
@@ -115,7 +116,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 				</TD>
 				<% } else if ( column.Name.Substring( column.Name.Length-2) == "ID" ) {%>
 			<% lookupname = column.Name.Substring( 0, column.Name.Length-2); %>
-				<cfinvoke component="#APPLICATION.DIR#CFC\<%= lookupname %>DAO"		method="Pick"	returnvariable="q<%= lookupname %>">
+				<cfinvoke component="\CFC\<%= lookupname %>DAO"		method="Pick"	returnvariable="q<%= lookupname %>">
 				<TD class="TDData">
 					<select id="<%= column.Name %>" name="<%= column.Name %>" class="TxtIn" <% if ( column.AllowDBNull == false) {%> required <% } %>>
 						<option value="">Select one...</option>

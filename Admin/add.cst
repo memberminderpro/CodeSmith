@@ -9,6 +9,7 @@
 <!-- #include file="../scripts/CFType.cs" -->
 <!-- #include file="../scripts/cfcInitDefault.cs" -->
 <!-- #include file="../scripts/CFDefault.cs" -->
+<!-- #include file="../scripts/SplitCamelCase.cs" -->
 public override string GetFileName() {
 	return "Add.cfm";
 }
@@ -46,14 +47,13 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<%= strSourceTable %> - Add.cfm
 ---------------------------------------------------------------------------------------------- --->
 
-<cfinvoke component="#APPLICATION.DIR#CFC\<%= strSourceTable %>" method="Init" returnvariable="<%= strSourceTable %>Obj">
+<cfinvoke component="\CFC\<%= strSourceTable %>" method="Init" returnvariable="<%= strSourceTable %>Obj">
 <cfset <%= strSourceTable %> = <%= strSourceTable %>Obj.getMemento()>
 
 <cfset N = 0>
 <div class="tablewrapper">
-<div class="tabletitle"><%= strSourceTable %></div>
+<div class="tabletitle"><%= SplitCamelCase(strSourceTable) %></div>
 <table border="0" cellpadding="0" cellspacing="0" class="tablesorter hasStickyHeaders" width="100%">
-	<caption><h2 class="h2"><strong><%= strSourceTable %></strong></h2></caption>
 	<THEAD>
 	<TR>
 		<cfinclude template="TH.cfm">
@@ -77,11 +77,19 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "modified_by":		%>
 		<% case "created_tmstmp":	%>
 		<% case "created_by":		%>
-		<%		break;				%>
 		<% case "accountid":		%>
 			<% break; %>
 		<% case "orgyear":		%>
-			<% break; %>		<% default:%>
+			<% break; %>
+		<% case "securitylevel":		%>
+			<cfinvoke component="#APPLICATION.DIR#cfc\RoleDAO" method="View" returnvariable="UserRoleQ">  <!--- Maybe move to the top? --->
+			<select name="SecurityLevel" class="TxtIn">
+				<cfloop query="UserRoleQ">
+					<option value="#SecurityLevel#">#SecurityLevel#-#Evaluate(DE(UserRole))#</option>
+				</cfloop>
+			</select>
+			<% break; %>
+		<% default:%>
 			<% string strColType = column.NativeType;	%>
 			<% switch (strColType)	%>
 				<% {	%>
@@ -118,7 +126,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 						<% if ( column.Size < 1) { %>
 		<TD class="TableCellL"><textarea name="<%= column.Name %>" rows="2" cols="40" class="TxtIn">#<%= strSourceTable %>.<%= column.Name %>#</textarea></TD>
 						<% } else { %>
-		<TD class="TableCellC"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"  maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"  maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
 						<% } %>
 						<% break; %>
 					<% case "xml":		%>
@@ -134,7 +142,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 	<% } %>
 <% } %>
-	</cfoutput>
+		</cfoutput>
 	</tr>
 	<cfoutput query="Q">
 		<cfset N = N + 1>

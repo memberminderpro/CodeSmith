@@ -173,7 +173,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 				<%= SourceTable.Name %>.<%= SourceTable.Columns[i].Name %><% if (i < SourceTable.Columns.Count-1) %>,
 				<% } %>
 
-				FROM	<%= SourceTable.Name %>
+			FROM	<%= SourceTable.Name %>
 			WHERE 		1 = 1
 			<cfif ARGUMENTS.<%= SourceTable.Columns[0].Name %> GT 0>
 				AND		<%= SourceTable.Name %>.<%= SourceTable.Columns[0].Name %> 	= <CFQUERYPARAM Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#"	CFSQLTYPE="CF_SQL_INTEGER">
@@ -419,7 +419,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> - created
 
-	<cfinvoke component="#APPLICATION.DIR#cfc\<%= strSourceTable %>DAO" method="InsertRec" returnvariable="<%= SourceTable.Columns[0].Name %>">
+	<cfinvoke component="\cfc\<%= strSourceTable %>DAO" method="InsertRec" returnvariable="<%= SourceTable.Columns[0].Name %>">
 	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && column.ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue;  %>
 		<% if ( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   

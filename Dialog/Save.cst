@@ -30,7 +30,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 } 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2010-2016 DACdb, LLC.
+	Copyright(c) 2003-2020 DACdb, LLC.
 	<%=strSourceTable %>Save.cfm
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> - created
@@ -48,11 +48,12 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<% } %>
 	<cfset FORM.FieldNames = "<%= fieldNames.Substring( 0, fieldNames.Length-1)  %>">
 ---------------------------------------------------------------------------------------------------->	
-<cfinclude template="../../secure.cfm">
+<cfinclude template="/secure.cfm">
 <cfsetting enablecfoutputonly	= "TRUE" /> 
 <cfsetting showdebugoutput		= "No">
 
-<cfif SESSION.DebugLevel GT 0>
+<cfset fDebug = TRUE>
+<cfif fDebug>
 	<cfsavecontent variable="PageData">
 	<cfdump var="#Form#">
 	</cfsavecontent>
@@ -68,7 +69,11 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<% if ( column.Name == "Created_Tmstmp") continue; %>
 	<% if ( column.Name == "Modified_By") continue; %>
 	<% if ( column.Name == "Modified_Tmstmp") continue; %>
-	<cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="<%= CFInitType(column) %>">
+	<% if ( CFType(column) == "numeric" ) { %>
+<cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="string">
+	<%} else { %>
+<cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="<%= CFInitType(column) %>">
+	<% } %>
 	<% } %>
 	<cfparam name="FORM.FieldNames"			Default="<%= fieldNames.Substring( 0, fieldNames.Length-1) %>"	type="string">
  
@@ -86,15 +91,19 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 <% if ( column.Name == "Modified_By") continue; %>
 <% if ( column.Name == "Modified_Tmstmp") continue; %>
 <% if ( column.Name.Substring( column.Name.Length-2) == "ID" ) continue; %>
+	<% if ( CFType(column) == "numeric" ) { %>
+	<cfset FORM.<%= column.Name %>	= REReplace(FORM.<%= column.Name %>, "[^0-9\.]+", "", "ALL")>
+	<% } %>
 <% } %>
+
 	<!---  
 		Read in current values -- initialize defaults
 	--->
-	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <%= SourceTable.Columns[0].Name %>="#<%= SourceTable.Columns[0].Name %>#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
 
 	<!--- Update the <%=strSourceTable %> with changes from the FORM --->
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>" method="init" ArgumentCollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj"> 
+	<cfinvoke component="\CFC\<%=strSourceTable %>" method="init" ArgumentCollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj"> 
 		<cfloop Index="theField" list="#Form.FieldNames#">
 			<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
 		</cfloop>
@@ -107,11 +116,11 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<% if ( column.Name == "Created_Tmstmp") continue; %>
 	<% if ( column.Name == "Modified_By") continue; %>
 	<% if ( column.Name == "Modified_Tmstmp") continue; %>
-			<cfinvokeargument name="<%= column.Name %>"			Value="#Form.<%= column.Name %>#">
+		<cfinvokeargument name="<%= column.Name %>"			Value="#Form.<%= column.Name %>#">
 	<% } %>
 	</cfinvoke> 
 	
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%= SourceTable.Columns[0].Name %>">
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%= SourceTable.Columns[0].Name %>">
 	<cfif <%= SourceTable.Columns[0].Name %> EQ 0>
 		<cfset returnStruct.success = FALSE />
 		<cfset returnStruct.error   = "Could not save <%=strSourceTable %>" />

@@ -47,6 +47,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	</cfcatch>
 </cftry>
 
+<cfset Client.xxPS 	= PageSize>
 <!--------------------------------------------------------------------------------------------------
 	Setup
 ---------------------------------------------------------------------------------------------------->
@@ -101,8 +102,8 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 <!--------------------------------------------------------------------------------------------------
 	Display Page
 ---------------------------------------------------------------------------------------------------->
-<cfset ModuleInc = "Validate,ToolTip,TableSort,TableSortWidgets,HighCharts,CKEditor,Upload,hasSubMenu">
-<cf_StdHeader Menu="/XXX/Index_Menu.cfm" Legacy="TRUE" ClubID="#ClubID#" Include="#ModuleInc#">
+<cfset ModuleInc = "Validate,BS4,JS4,ToolTip,TableSort,TableSortWidgets,HighCharts,CKEditor,Upload">
+<cf_StdHeader Menu="/<%=strSourceTable %>/Index_Menu.cfm" Legacy="TRUE" ClubID="#ClubID#" Include="#ModuleInc#">
 	<!--- Add custom page styles here. --->
 </cf_StdHeader>
 
@@ -114,7 +115,6 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 		<input type="hidden" 	name="ClubID" 					value="#ClubID#" 						id="ClubID">
 		<input type="hidden" 	name="UserID" 					value="#UserID#" 						id="UserID">
 
-		<input type="hidden"	name="RoleID" 					value="#SESSION.RoleID#"				id="RoleID">
 		<input type="hidden" 	name="TabNo" 					value="#TabNo#" 						id="TabNo">
 
 		<input type="hidden" 	name="Type"						value="UserIDs"							id="Type">
@@ -122,6 +122,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 		<input type="hidden"	name="StartRow" 				value="#StartRow#"						id="Startrow">
 		<input type="hidden" 	name="PageSize" 				value="#PageSize#"						id="PageSize">
 
+		<input type="hidden"	name="RoleID" 					value="#SESSION.RoleID#"				id="RoleID">
 		<input 	type="hidden" 	name="AccountLabel"				value="#SESSION.AccountLabel#"			id="Accountlabel">
 		<input 	type="hidden" 	name="ClubLabel" 				value="#SESSION.ClubLabel#"				id="Clublabel">
 
@@ -141,11 +142,8 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 					<button type="button" class="btn btn-info  		pull-right noprint" id="word" 	Title="To Word" 		Alt="To Word">			<i class="fas fa-file-word fa-lg"></i></button>
 					<button type="button" class="btn btn-info  		pull-right noprint" id="pdf" 	Title="To PDF" 			Alt="To PDF">			<i class="fas fa-file-pdf fa-lg"></i></button>
 
-					<cfif SESSION.RoleID GTE 8>
-						<button type="button" class="btn btn-secondary 	pull-right noprint" id="switchDistrict"><i class="fas fa-exchange fa-lg"></i>	</button>
-					</cfif>
-					<div class="input-group pull-right col-md-4">   <!--- Needs BS4 --->
-						<input id="headersearch" class="form-control py-2 border-right-0 border" type="search" name="Filter" value="" placeholder="search..">
+<div class="col-md-4 input-group pull-right">   <!--- Needs BS4 --->
+						<input id="Filter" class="form-control input-xs" type="search" name="Filter" value="" placeholder="search..">
 						<span class="input-group-append">
 							<div class="input-group-text bg-transparent"><i class="fa fa-search"></i></div>
 						</span>
@@ -154,7 +152,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 			</div>
 		</section>
 
-		<section class="content content-buttons noprint" style="border-bottom: 1px solid ##dcdcdc; padding: 8px 0 8px 0; margin-bottom: 12px;">
+		<section class="content content-buttons noprint" style="border-bottom: 1px solid ##dcdcdc;">
 			<div class="row">
 				<div class="col-md-8 col-xs-12">
 					Some descrption here.
@@ -178,7 +176,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 		</section>
 
 		<!-- Main content -->
-		<section class="content">
+		<section class="content" style="margin-top: 20px;">
 			<div class="row">
 				<div class="col-md-12">
 
@@ -213,7 +211,10 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 var today = new Date();
 var pagenum = 1;
 var setTab = parseInt( $("#TabNo").val() );
-
+var dialogPosition = {
+	my: "center top",
+	at: "center top+50"
+};
 $(document).ready(function(){
 //alert("ready");
 
@@ -427,7 +428,10 @@ function refreshParent() {
 }
 
 function <%=strSourceTable %>Dialog (id, action) {
-	alert("IndexDialog="+id);
+	alert("<%=strSourceTable %>Dialog="+id);
+
+	$("#<%=strSourceTable %>Div").html( '<div align="center"><img src="/images/loading2.gif"></div>' );
+
 	$.ajax({
 		type: "POST",
 		url: 'Dialog/<%=strSourceTable %>Dialog.cfm?'+Math.random(),
@@ -456,11 +460,11 @@ function <%=strSourceTable %>Dialog (id, action) {
 					width: 800,
 					show: {effect: 'fade', speed: 2000} ,
 					modal: true,
-
+					closeOnEscape: true,
+					position: dialogPosition,
 					buttons:
 						[
 							{ text: "Cancel", click: function() { $(this).dialog("close") } },
-							
 							{ text: "Delete", click: function() { 
 								if (window.confirm("Please confirm - this will delete Item?"))
 									{
@@ -480,7 +484,6 @@ function <%=strSourceTable %>Dialog (id, action) {
 									$(this).dialog("close");
 								}
 							}},
-
 							{ text: "Save", click: function() {
 								if ( $("#<%=strSourceTable %>Form").valid() ) {
 									$.post("Action/<%=strSourceTable %>Save.cfm",

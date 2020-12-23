@@ -14,7 +14,7 @@
 		}
 		$.ajax({ 
 			type: "POST",
-			url: "Action/Delete.cfm",
+			url: "Action/MemberPrevClubDelete.cfm",
 			data: {
 				id: id
 			},

@@ -57,7 +57,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <cfset N = 0>
 <cfloop index="ID" list="#Q#">
 	<cfset N = N + 1>
-	<cfinvoke component="#APPLICATION.DIR#cfc\<%= strSourceTable %>DAO" method="UpdateSequence" returnvariable="RC">
+	<cfinvoke component="\cfc\<%= strSourceTable %>DAO" method="UpdateSequence" returnvariable="RC">
 		<cfinvokeargument name="<%= SourceTable.Columns[0].Name %>"			Value="#ID#">
 		<cfinvokeargument name="Sequence"					Value="#N#">
 	</cfinvoke>

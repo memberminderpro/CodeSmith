@@ -72,7 +72,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 <!-------------------------------------------------------------------------------------------------
 	Query DB
 ---------------------------------------------------------------------------------------------------->
-<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="List"  returnvariable="Q">
+<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="List"  returnvariable="Q">
 	<cfinvokeargument name="TypeID"					Value="#TypeID#">
 	<cfinvokeargument name="Filter"					Value="#Filter#">
 	<cfinvokeargument name="SortBy"					Value="<%= SourceTable.Columns[1].Name %>">
@@ -118,7 +118,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 						<input type="Checkbox"	name="CheckAll" checked 	class="CheckAll"	id="CheckAll">
 					</div>
 				</TH>
-				<TH width="4%"  data-sorter="false">Action</TH>
+				<TH width="4%" class="TableHeadC" data-sorter="false">Action</TH>
 			</cfif>
 
 			<!--- Moveable columns --->
@@ -133,37 +133,37 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 				<% if (col == 2) { %>
 					<cfcase value="<%= column.Name %>">			<TD ><a href="##" id="#<%=column.Name %>#" class="StandardLink">#<%= column.Name %>#</a></TD>					</cfcase>
 				<% } else if ( column.Name == "Modified_Tmstmp") {%>
-					<cfcase value="Modified">			<TH >Modified</TH>					</cfcase>
-					<cfcase value="Modified_Tmstmp">	<TH >Modified Tmstmp</TH>					</cfcase>
+					<cfcase value="Modified">			<TH class="TableHeadL">Modified</TH>					</cfcase>
+					<cfcase value="Modified_Tmstmp">	<TH class="TableHeadL">Modified Tmstmp</TH>					</cfcase>
 				<% } else if ( column.Name == "Modified_By") {%>
-					<cfcase value="Modified_By">		<TH >Modified By</TH>					</cfcase>
+					<cfcase value="Modified_By">		<TH class="TableHeadL">Modified By</TH>					</cfcase>
 				<% } else if ( column.Name == "Created_Tmstmp" ) {%>
-					<cfcase value="Created">			<TH >Created</TH>					</cfcase>
-					<cfcase value="Created_Tmstmp>">	<TH >Created Tmstmp</TH>					</cfcase>
+					<cfcase value="Created">			<TH class="TableHeadL">Created</TH>					</cfcase>
+					<cfcase value="Created_Tmstmp>">	<TH class="TableHeadL">Created Tmstmp</TH>					</cfcase>
 				<% } else if ( column.Name == "Created_By" ) {%>
-					<cfcase value="<%= column.Name %>">			<TH >Created By</TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">Created By</TH>					</cfcase>
 				<% } else if (Right(column.Name,2) == "ID") {%>
-					<cfcase value="<%= column.Name %>">			<TH >#<%= column.Name %>#</TH>									</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">#<%= column.Name %>#</TH>									</cfcase>
 				<% } else if ( column.NativeType == "smalldatetime" || column.NativeType == "datetime") {%>
-					<cfcase value="<%= column.Name %>">			<TH >#DateFormat(<%= column.Name %>, SESSION.DateFmt)#</TH>							</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">#DateFormat(<%= column.Name %>, SESSION.DateFmt)#</TH>							</cfcase>
 				<% } else if ( column.Name == "AccountID") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><cfoutput>#SESSION.AccountLabel#</cfoutput></TH>			</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadC"><cfoutput>#SESSION.AccountLabel#</cfoutput></TH>			</cfcase>
 				<% } else if ( column.Name == "ClubID") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><cfoutput>#SESSION.ClubLabel#</cfoutput></TH>			</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><cfoutput>#SESSION.ClubLabel#</cfoutput></TH>			</cfcase>
 				<% } else if ( column.Name == "RegionID") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><cfoutput>#SESSION.RegionLabel#</cfoutput></TH>			</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><cfoutput>#SESSION.RegionLabel#</cfoutput></TH>			</cfcase>
 				<% } else if ( CFType(column) == "date") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } else if  ( column.NativeType == "decimal") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } else if ( column.NativeType == "money") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadC"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } else if ( CFType(column) == "numeric") {%>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadC"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } else if ( column.Name.Substring(0,2) == "Is" && column.Size == 1) {%>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadC"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } else { %>
-					<cfcase value="<%= column.Name %>">			<TH ><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } %>
 			<% } %>
 					<cfdefaultcase>						<TH >#Column#</TH>					</cfdefaultcase>
@@ -232,7 +232,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 				<% } else if ( CFType(column) == "date") {%>
 					<cfcase value="<%= column.Name %>">			<TD >#DateFormat(<%= column.Name %>, SESSION.DateFmt)#</TD>							</cfcase>
 				<% } else if  ( column.NativeType == "decimal") {%>
-					<cfcase value="<%= column.Name %>">			<TD >#DeciamlFormat(<%= column.Name %>)#</TD>											</cfcase>
+					<cfcase value="<%= column.Name %>">			<TD >#DecimalFormat(<%= column.Name %>)#</TD>											</cfcase>
 				<% } else if ( column.NativeType == "money") {%>
 					<cfcase value="<%= column.Name %>">			<TD >#DollarFormat(<%= column.Name %>)#</TD>											</cfcase>
 				<% } else if ( CFType(column) == "numeric") {%>

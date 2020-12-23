@@ -130,7 +130,6 @@ function <%=strSourceTable %>Dialog (id) {
 								alert("Validation failed!  One or more required fields were not entered.");
 								} 
 							}},
-
 							{ text: "Delete", click: function() { 
 							  	if (window.confirm("Please confirm - this will delete record.")) {
 									$.post("Action/<%=strSourceTable %>Delete.cfm", 
