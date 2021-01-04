@@ -36,18 +36,15 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 //-------------------------------------------------------------------------------------------------
 
 $(document).ready(function(){
-	var pagenum = 1;
 
-	$(".headersearch").focus();
-
-	$( "#programconfig" ).click(function() {
-		// alert("programconfig");
+	$( "#config" ).click(function() {
+		// alert("config");
 
 		var systemText  = 'Set System Default [Lvl-9]';
 		var accountText = "Set "+ $("#Accountlabel").val() + " Default";
 		var defaultText = "Set "+ $("#Clublabel").val() + " Default";
 
-		$( "#programwrap" ).load('Dialog/<%=strSourceTable %>Config.cfm?r='+Math.random(), function() {
+		$( "#ConfigDiv" ).load('Dialog/<%=strSourceTable %>Config.cfm?r='+Math.random(), function() {
 
 			$( "#ConfigSortInUse" ).sortable({
 				connectWith: ".connectedSortable",
@@ -65,7 +62,7 @@ $(document).ready(function(){
 				cursor: 'move'
 			});
 
-			$("#programwrap").dialog({ modal:true, winWidth:800, width: '75%', buttons: [
+			$("#ConfigDiv").dialog({ modal:true, winWidth:800, width: '75%', buttons: [
 				{
 					text: systemText,		// (0,0,0)
 					click: function() {

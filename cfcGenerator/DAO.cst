@@ -744,7 +744,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		</cftry>
 		<cfreturn TRUE />
 	</cffunction>
-	
+
 <!--- ----------------------------------------------------------------------------------------------------------------
 	Clone -  <%= strSourceTable %>
 	Modifications

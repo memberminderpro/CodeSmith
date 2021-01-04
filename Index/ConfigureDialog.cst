@@ -33,8 +33,8 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	Note: Cannot use _ in names - jquery serialiation messes up
 ---------------------------------------------------------------------------------------------------->	
 <cfsetting showdebugoutput="no">
-<cfinclude template="../../secure.cfm"> 
-<cfinclude template="../../cfscript/profile.cfm">
+<cfinclude template="/secure.cfm"> 
+<cfinclude template="/cfscript/profile.cfm">
 
 <!---
 	Get Configure Save Profile Values
@@ -54,7 +54,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 		"Created|Created," & 
 		"CreatedBy|Created By," & 
 		<% } else if ( column.Name == "Created_Tmstmp" ) {%>
-		"CreatedTmstmp|Created Tmstmp," 
+		"CreatedTmstmp|Created Tmstmp," &
 		<% } else if ( column.Name == "Modified_By" ) {%>
 		"Modified|Modified," & 
 		"ModifiedBy|Modified By," &
