@@ -777,7 +777,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		</cfloop>
 		<cfreturn TRUE />
 	</cffunction>
-	
+
 <!--- ----------------------------------------------------------------------------------------------------------------
 	UpdateSequence -  <%= strSourceTable %> Update the Sequence
 	Modifications
