@@ -27,7 +27,10 @@ bool fPositionSort 	= false;
 string strSourceTable = SourceTable.Name;
 if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
 	 strSourceTable = strSourceTable.Substring(3);
-} 
+}
+if (strSourceTable.Length > 7 && strSourceTable.Substring(0, 7) == "tblUser") { 
+	 strSourceTable = "Member";
+}
 if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
 	 strSourceTable = strSourceTable.Substring(3);
 } 
@@ -93,7 +96,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	Modifications:
 		<%= DateTime.Now.ToShortDateString() %> $ - created
 ---------------------------------------------------------------------------------------------->
-	<cffunction Name="Get<%=strSourceTable %>Name" Access="Public" Output="FALSE" returnType="String" DisplayName="Get<%=strSourceTable %>Name">
+	<cffunction Name="Get<%=strSourceTable %>Name" Access="Public" Output="false" returnType="String" DisplayName="Get<%=strSourceTable %>Name">
 		<cfargument Name="<%=strSourceTable %>ID"		 Type="Numeric"		Required="Yes"		Hint="<%=strSourceTable %>ID" >
 
 		<cfset var qGet<%=strSourceTable %>Name = "">
