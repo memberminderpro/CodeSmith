@@ -16,7 +16,7 @@ public override string GetFileName() {
 	if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
 		 strSourceTable = strSourceTable.Substring(3);
 	} 
-		return strSourceTable + "Admin.cfm";
+	return "Admin.cfm";
 }
 </script>
 <% 
@@ -189,7 +189,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!-------------------------------------------------------------------------------------------------
 	Display Page
 ---------------------------------------------------------------------------------------------------->
-<cfset ModuleInc = "Validate,BS4,JS4,TableSort,TableSortWidgets">
+<cfset ModuleInc = "Validate,BS4,JS4,TableSort">
 <cf_StdHeader Menu="/Admin/Index_Menu.cfm" Legacy="TRUE" Include="#ModuleInc#">
 	<!--- Add custom page styles here. --->
 </cf_StdHeader>
@@ -197,7 +197,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <div class="content-wrapper">
 
 	<cfoutput>
-	<form id="form" name="form" action="<%= strSourceTable %>Admin.cfm" method="post" onsubmit="return validate_form(this);">
+	<form id="form" name="form" action="Admin.cfm" method="post" onsubmit="return validate_form(this);">
 		<input type="hidden"	name="AccountID"				value="#AccountID#"				id="AccountID">
 		<input type="hidden"	name="ClubID"					value="#ClubID#"				id="ClubID">
 
@@ -205,7 +205,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<section class="content noprint" style="padding: 8px 0 8px 0;">
 			<div class="row">
 				<div class="col-md-8">
-					<h1 class="h1"><%= SplitCamelCase(strSourceTable) %> Admin:  <strong><cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
+					<h1 class="h1"><%= SplitCamelCase(strSourceTable) %> Admin <!--- <strong><cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong>---></h1>
 				</div>
 				<div class="col-md-4">
 					<button type="button" class="btn btn-light btn-sm	 	pull-right noprint" id="config" Title="Configure" 		Alt="Configure">		<i class="fal fa-cog fa-lg fa-sm"></i></button>
@@ -267,10 +267,10 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 </cfinvoke>
 
 <cfswitch expression="#Action#">
-	<cfcase value="A">  <cfinclude template="<%= strSourceTable %>/Add.cfm">   </cfcase>
-	<cfcase value="V">  <cfinclude template="<%= strSourceTable %>/View.cfm">  </cfcase>
-	<cfcase value="E">  <cfinclude template="<%= strSourceTable %>/Edit.cfm">  </cfcase>
-	<cfcase value="D">  <cfinclude template="<%= strSourceTable %>/Del.cfm">   </cfcase>
+	<cfcase value="A">  <cfinclude template="Add.cfm">   </cfcase>
+	<cfcase value="V">  <cfinclude template="View.cfm">  </cfcase>
+	<cfcase value="E">  <cfinclude template="Edit.cfm">  </cfcase>
+	<cfcase value="D">  <cfinclude template="Del.cfm">   </cfcase>
 </cfswitch>
 
 				</div>	<!--- /col-md-12 --->
@@ -332,7 +332,7 @@ function InitializePage() {
 		cursor: 'move',
 		update: function() {
 			var order = $(this).sortable('serialize',{key:'Q'});
-			$.post("<%=strSourceTable %>/Sequence.cfm", order);
+			$.post("Sequence.cfm", order);
 		}
 	});
 
@@ -347,23 +347,23 @@ function InitializePage() {
 	$('#Add').on('click', function() {		
 		// alert("Add");
 		//<%=strSourceTable %>Dialog(0);
-		window.location = '<%= strSourceTable %>Admin.cfm?Action=A';
+		window.location = 'Admin.cfm?Action=A';
 	});
 
 	$('#Edit').on('click', function() {		
 		// alert("Edit");
 		//<%=strSourceTable %>Dialog(id);
-		window.location = '<%=strSourceTable %>Admin.cfm?Action=E';
+		window.location = 'Admin.cfm?Action=E';
 	});
 
 	$('#Delete').on('click', function() {
 		//alert("Delete");
-		window.location = '<%=strSourceTable %>Admin.cfm?Action=D';
+		window.location = 'Admin.cfm?Action=D';
 	});
 
 	$('#Cancel').on('click', function() {
 		//alert("Cancel");
-		window.location = '<%=strSourceTable %>Admin.cfm?Action=V';
+		window.location = 'Admin.cfm?Action=V';
 	});
 	
 	RefreshTable();
@@ -394,7 +394,7 @@ function ReBind() {
 
 	$( ".Date" ).datepicker({
 		showOn: 'both',
-		buttonImage : '/images/tcal/cal.gif',
+		buttonImage : '/images/cal.gif',
 		buttonText : 'Click Calendar',
 		numberOfMonths: 1
 	});
@@ -416,6 +416,7 @@ function ReBind() {
 		return false;
 	});
 
+/*
 	$('.Edit').on('click', function() {		
 		var id =  $(this).attr( "id" );
 		// alert("Edit="+id);
@@ -452,7 +453,7 @@ function ReBind() {
 			}
 		});	
 	});
-	
+*/
 }
 function checkRow(r) {
 	eval("document.form.Chk_" + r + ".value = " + r);

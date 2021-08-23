@@ -53,7 +53,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 <% n=n+1; %>
 <%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
-	<TH class="TableHeadC" width="25" data-sorter="false">ID</TH>
+	<TH class="TableHeadC" width="25" <!--- data-sorter="false" --->>ID</TH>
 <% } else { %>
 	<%  switch (column.Name.ToLower() )  %>
 	<% { %>

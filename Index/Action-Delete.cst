@@ -59,9 +59,9 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 	<!---  
 		Read in current values -- initialize defaults
 	--->
-	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init(<% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read"   <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Delete" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="RC">
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init(<% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read"   <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Delete" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="RC">
 	<cfif NOT RC>
 		<cfset returnStruct.success = FALSE />
 		<cfset returnStruct.error   = "Could not delete <%=strSourceTable %>" />

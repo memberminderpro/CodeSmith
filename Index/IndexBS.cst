@@ -36,7 +36,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 <cfsetting showdebugoutput="No">
 
 <cfinclude template="/secure.cfm"> 
-<cfinclude template="../cfscript/profile.cfm">
+<cfinclude template="/cfscript/profile.cfm">
 
 <cftry>
 	<cfparam name="AccountID" 				default="#SESSION.AccountID#"							type="numeric">
@@ -92,7 +92,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 <cfset ModuleInc = "Validate,BS4,JS4,TableSort">	<!--- ToolTip,HighCharts,CKEditor,Upload  --->
 <cf_StdHeader Menu="#ReplaceNoCase(CGI.SCRIPT_NAME, GetFileFromPath(CGI.SCRIPT_NAME),"")#Index_Menu.cfm" Legacy="TRUE" ClubID="#ClubID#" Include="#ModuleInc#">
 	<!--- Add custom page styles here. --->
-</cf_Stdheader>
+</cf_StdHeader>
 
 <div class="content-wrapper">
 
@@ -114,7 +114,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 
 		<input type="hidden" 	name="Submit" 					value="Save"							id="Submit">
 
-		<section class="content" style="padding: 8px 0 8px 0;">
+		<section class="content noprint" style="padding: 8px 0 8px 0;">
 			<div class="row">
 				<div class="col-md-8">
 					<h1 class="h1"><strong>Admin:  <cfif ClubID EQ 0>#SESSION.AccountLabel# <cfelse>#SESSION.ClubLabel# #SESSION.ClubName#</cfif> </strong></h1>
@@ -134,6 +134,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 							<div class="input-group-text bg-transparent"><i class="fa fa-search"></i></div>
 						</span>
 					</div>
+				</div>
 			</div>
 		</section>
 
@@ -189,7 +190,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 </div>	<!--- /tabswrap --->
 
 
-<div id="DataContent" align="center">
+<div id="DataContent" align="left">
 	<img src="../images/loading2.gif">
 </div>
 
@@ -508,5 +509,4 @@ function <%=strSourceTable %>Dialog (id) {
 }	// OpenDialog
 
 </script>
-
 </cf_StdFooter>

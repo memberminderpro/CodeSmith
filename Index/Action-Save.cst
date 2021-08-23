@@ -99,10 +99,10 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<!---  
 		Read in current values -- initialize defaults
 	--->
-	<cfset <%=strSourceTable %>Obj = createObject("component", "#APPLICATION.DIR#CFC\<%=strSourceTable %>").init( <% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
 
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>" method="init" argumentcollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj">
+	<cfinvoke component="\CFC\<%=strSourceTable %>" method="init" argumentcollection="#<%=strSourceTable %>#"  returnvariable="<%=strSourceTable %>Obj">
 		<cfloop Index="theField" list="#FIELDNAMES#">
 			<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
 		</cfloop>
@@ -120,7 +120,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<% } %>
 	</cfinvoke>
 
-	<cfinvoke component="#APPLICATION.DIR#CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<% =SourceTable.Columns[0].Name %>">
+	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Save" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<% =SourceTable.Columns[0].Name %>">
 	<cfif <% =SourceTable.Columns[0].Name %> EQ 0>
 		<cfset returnStruct.success = FALSE />
 		<cfset returnStruct.error   = "Could not save <%=strSourceTable %>" />
