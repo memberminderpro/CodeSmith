@@ -130,14 +130,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 						<% if ( column.Size < 1) { %>
 		<TD class="TableCellL"><textarea name="<%= column.Name %>" rows="2" cols="40" class="TxtIn">#<%= strSourceTable %>.<%= column.Name %>#</textarea></TD>
 						<% } else { %>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"  maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
 						<% } %>
 						<% break; %>
 					<% case "xml":		%>
 					<% case "date":		%>
 					<% case "datetime":	%>
 					<% case "smalldatetime":	%>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"  maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
 						<% break; %>
 					<% default:	%>
 						<% break; %>

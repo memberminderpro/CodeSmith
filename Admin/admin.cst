@@ -189,7 +189,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!-------------------------------------------------------------------------------------------------
 	Display Page
 ---------------------------------------------------------------------------------------------------->
-<cfset ModuleInc = "Validate,BS4,JS4,TableSort">
+<cfset ModuleInc = "Validate,BS4,JS4,TableSort,TableSortWidgets">
 <cf_StdHeader Menu="/Admin/Index_Menu.cfm" Legacy="TRUE" Include="#ModuleInc#">
 	<!--- Add custom page styles here. --->
 </cf_StdHeader>
