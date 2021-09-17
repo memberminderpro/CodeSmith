@@ -5,11 +5,13 @@
 <%@ Assembly Name="System.Design" %>
 <%@ Import Namespace="SchemaExplorer" %>
 <script runat="template">
-	<!-- #include file="../scripts/CFType.cs" -->
-	<!-- #include file="../scripts/CFPropertyType.cs" -->
-	<!-- #include file="../scripts/CFTabs.cs" -->
-	<!-- #include file="../scripts/CFInitType.cs" -->
 	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	<!-- #include file="../scripts/Required.cs" -->
+	<!-- #include file="../scripts/CFPropertyType.cs" -->
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFInitType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
 	public override string GetFileName() {
 		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
 			return SourceTable.Name.Substring(3) + ".cfc";

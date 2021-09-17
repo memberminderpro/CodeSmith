@@ -509,6 +509,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<% } %>
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<cfset REQUEST.Error = "#cfcatch.message# #cfcatch.detail#">
 					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error inserting <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn 0 />
@@ -576,16 +577,17 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[i].Name %>()#"<%= CFTabCreate(SourceTable.Columns[i].Name) %>CFSQLType="<%= SQLType(SourceTable.Columns[i]) %>" />,
 				<% } %>
 			<% } %>
-			
+	
 				)
 			</cfquery>
 			<% if (SourceTable.Columns[0].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[0].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true" ) { %>  
-				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#R.IDENTITYCOL#" Desc="Insert into <%=strSourceTable %>">
+				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#R.IDENTITYCOL#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# created">
 			<% } else { %>
-				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="Insert into <%=strSourceTable %>">
+				<CF_XLog Table="<%=strSourceTable %>" type="I" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# created">
 			<% } %>
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<cfset REQUEST.Error = "#cfcatch.message# #cfcatch.detail#">
 					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error inserting <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn 0 />
@@ -669,15 +671,18 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 		<cfset var qDelete = "" />
 		<cfset var R       = "" />
-		<cftry>
+		<cfset var <%= SourceTable.Columns[0].Name %> = ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[0].Name %>() />
+
+	<cftry>
 			<cfquery name="qDelete" datasource="#VARIABLES.dsn#" Result="R">
 				DELETE FROM	<%= SourceTable.Name %>
 				WHERE	1 = 1
-				AND		<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" 					CFSQLType="cf_sql_integer" />
+				AND		<%= SourceTable.Columns[0].Name %> = <cfqueryparam value="#<%= SourceTable.Columns[0].Name %>#"		CFSQLType="cf_sql_integer" />
 			</cfquery>
-			<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= strSourceTable %>.get<%= SourceTable.Columns[0].Name %>()#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Physically Deleted">
+			<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Physically Deleted">
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<cfset REQUEST.Error = "#cfcatch.message# #cfcatch.detail#">
 					<CF_XLog Table="<%=strSourceTable %>" type="D" Value="0" Desc="Error deleting <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn FALSE />
@@ -711,6 +716,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<CF_XLog Table="<%= strSourceTable %>" type="D" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="#ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Logically Deleted">
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<cfset REQUEST.Error = "#cfcatch.message# #cfcatch.detail#">
 					<CF_XLog Table="<%= strSourceTable %>" type="D" Value="0" Desc="Error deleting logical <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn FALSE />
@@ -740,6 +746,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" Desc="<%=strSourceTable %> Deleted">
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
+					<cfset REQUEST.Error = "#cfcatch.message# #cfcatch.detail#">
 					<CF_XLog Table="<%=strSourceTable %>" type="D" Value="#ARGUMENTS.<%= SourceTable.Columns[0].Name %>#" Desc="Error deleting <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn FALSE />

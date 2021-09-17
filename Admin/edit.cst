@@ -45,7 +45,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	} 
 } 
 %>
-<!-------------------------------------------------------------------------------------------------
+<!--- ----------------------------------------------------------------------------------------------
 	<%= strSourceTable %> Edit.cfm
 ---------------------------------------------------------------------------------------------- --->
 
@@ -94,13 +94,15 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "orgyear":		%>
 			<% break; %>
 		<% case "securitylevel":		%>
-			<cfinvoke component="\cfc2\UserRoleDAO" method="View" returnvariable="UserRoleQ">  <!--- Maybe move to the top? --->
-			<cfset SL = SecurityLevel>
-			<select name="SecurityLevely_#N#" class="TxtIn" onChange="checkRow('#N#');">
-				<cfloop query="UserRoleQ">
-					<option value="#SecurityLevel#" <cfif SL EQ SecurityLevel> selected </cfif>>#SecurityLevel#-#Evaluate(DE(UserRole))#</option>
-				</cfloop>
-			</select>
+				<TD class="TableCellL">
+					<cfinvoke component="\cfc2\UserRoleDAO" method="View" returnvariable="UserRoleQ">  <!--- Maybe move to the top? --->
+					<cfset SL = SecurityLevel>
+					<select name="SecurityLevely_#N#" class="TxtIn" onChange="checkRow('#N#');">
+						<cfloop query="UserRoleQ">
+							<option value="#SecurityLevel#" <cfif SL EQ SecurityLevel> selected </cfif>>#SecurityLevel#-#Evaluate(DE(UserRole))#</option>
+						</cfloop>
+					</select>
+				</td>
 			<% break; %>
 		<% default:%>
 			<% string strColType = column.NativeType;	%>
@@ -117,7 +119,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 							<% } %>
 						<% break; %>
 					<% case "money":	%>
-					<% case "decimal":		%>
+					<% case "decimal":	%>
 				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#DecimalFormat(Q.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
 						<% break; %>
 					<% case "float":	%>
@@ -125,14 +127,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 						<% break; %>
 					<% case "char":		%>
 				<% if ( column.Size == 1 ) { %>
-				<TD class="TableCellC">
-					<input type="checkbox"	name="<%= column.Name %>_#N#"		value="Y"	<cfif Q.<%= column.Name %> EQ "Y"> checked </cfif> class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);">
-				-- or --
-					<select id="<%= column.Name %>_#N#" name="<%= column.Name %>_#N#" class="TxtIn"	onChange="checkRow('#N#');">
-						<option value="N" <cfif Q.<%= column.Name %> EQ "N"> selected </cfif>>No	</option>
-						<option value="Y" <cfif Q.<%= column.Name %> EQ "Y"> selected </cfif>>Yes</option>
-					</select>
-				</td>
+				<TD class="TableCellC"><input type="checkbox"	name="<%= column.Name %>_#N#"		value="Y"	<cfif Q.<%= column.Name %> EQ "Y"> checked </cfif> class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
 					<% } else { %>
 				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#Trim(Q.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);" required></td>
 						<% } %>

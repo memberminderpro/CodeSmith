@@ -103,7 +103,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtInC MinZero" onkeypress="return noEnter(event);" ></TD>
 						<% } %>
 						<% break; %>
-					<% case "decimal":		%>
+					<% case "decimal":	%>
 					<% case "money":	%>
 		<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>"		value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
 						<% break; %>
@@ -111,16 +111,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>,'9,999.9')#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
 						<% break; %>
 					<% case "char":		%>
-						<% break; %>
 		<% if ( column.Size == 1 ) { %>
-		<TD class="TableCellC">
-			<input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);">
-				-- or --
-			<select id="<%= column.Name %>" name="<%= column.Name %>" class="TxtIn">
-				<option value="N" <% if ( CFDefault(column) == "N" ) { %>selected<% } %>>No	</option>
-				<option value="Y" <% if ( CFDefault(column) == "Y" ) { %>selected<% } %>>Yes</option>
-			</select>
-		</td>
+		<TD class="TableCellC"><input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);"></td>
 		<% } else { %>
 		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onChange="checkRow('#N#');"  onkeypress="return noEnter(event);" ></TD>
 		<% } %>

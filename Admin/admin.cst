@@ -379,16 +379,7 @@ function ReBind() {
 	$(".tablesorter").tablesorter({
 		debug:false,
 		theme: 'custom',
-		widgets: ['zebra','saveSort','cssStickyHeaders'],
-		widgetOptions : {
-			saveSort: true,
-			zebra : [ "even", "odd" ],
-			stickyHeaders : 'tablesorter-stickyHeader',
-			cssStickyHeaders_addCaption    : true,
-			cssStickyHeaders_attachTo      : null,
-			cssStickyHeaders_filteredToTop : true,
-			cssStickyHeaders_offset        : 0
-		}
+		widgets: ['zebra']
 	});
 
 
