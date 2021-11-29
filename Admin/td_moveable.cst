@@ -55,6 +55,11 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <% n=n+1; %>
 <%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
 	<TD class="TableCellC" valign="top"><font class="small">#Q.<%= column.Name %>#</font></TD>
+
+	<!--- Moveable columns --->
+	<cfloop index="Column" list="#FieldList#">
+		<cfswitch expression="#Column#">
+
 <% } else { %>
 	<%  switch (column.Name.ToLower() )  %>
 	<% { %>
@@ -62,20 +67,20 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "sequence":	%>
 			<% break; %>
 		<% case "isactive":	%>
-	<TD class="TableCellC"><cfif IsActive EQ "Y">	<IMG src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellC"><cfif IsActive EQ "Y">	<IMG src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>			</cfcase>
 			<% break; %>
 		<% case "modified_tmstmp":	%>
-	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Modified_By#<BR><CF_DisplayDate Date="#Q.Modified_Tmstmp#"></TD>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Modified_By#<BR><CF_DisplayDate Date="#Q.Modified_Tmstmp#"></TD>			</cfcase>
 			<% break; %>
 		<% case "modified_by":		%>
 			<% break; %>
 		<% case "created_tmstmp":	%>
-	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Created_By# <BR><CF_DisplayDate Date="#Q.Created_Tmstmp#"></TD>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Created_By# <BR><CF_DisplayDate Date="#Q.Created_Tmstmp#"></TD>			</cfcase>
 			<% break; %>
 		<% case "created_by":		%>
 			<% break; %>
+		<% case "dflag":		%>
 		<% case "accountid":		%>
-			<% break; %>
 		<% case "orgyear":		%>
 			<% break; %>
 		<% default:%>
@@ -88,27 +93,29 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<% case "numeric":	%>
 					<% case "smallint":	%>
 					<% case "tinyint":	%>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellC">#Q.<%= column.Name %>#</td>			</cfcase>
 				<% break; %>
 					<% case "decimal":	%>
 					<% case "float":	%>
 					<% case "money":	%>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellR">#Q.<%= column.Name %>#</td>			</cfcase>
 				<% break; %>
 					<% case "char":		%>
-	<% if ( column.Name.Substring(0, 2) == "Is" ) { %>
-	<TD class="TableCellC"><cfif <%= column.Name %> EQ "Y">		<img src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
+		<% if ( column.Name.Substring(0, 2) == "Is" ) { %>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellC"><cfif <%= column.Name %> EQ "Y">		<img src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>			</cfcase>
 				<% } else { %>
 		<% if ( column.Size == 1 ) { %>
-	<TD class="TableCellC">
-		<cfswitch expression="#Q.<%= column.Name %>#">
-			<cfcase value="N">No	</cfcase>
-			<cfcase value="Y">Yes	</cfcase>
-			<cfdefaultcase>#Q.<%= column.Name %>#</cfdefaultcase>
-		</cfswitch>
-	</TD>
+			<cfcase value="<%= column.Name %>">	
+				<TD class="TableCellC">
+					<cfswitch expression="#Q.<%= column.Name %>#">
+						<cfcase value="N">No	</cfcase>
+						<cfcase value="Y">Yes	</cfcase>
+						<cfdefaultcase>#Q.<%= column.Name %>#</cfdefaultcase>
+					</cfswitch>
+				</TD>
+			</cfcase>
 					<% } else { %>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellC">#Q.<%= column.Name %>#</td>			</cfcase>
 					<% } %>
 				<% } %>
 				<% break; %>
@@ -118,7 +125,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<% case "date":		%>
 					<% case "datetime":	%>
 					<% case "smalldatetime":	%>
-	<TD class="TableCellL"<% if (n==2) { %> style="white-space:nowrap;"<% }%>>#Q.<%= column.Name %>#</TD>
+			<cfcase value="<%= column.Name %>">	<TD class="TableCellL"<% if (n==2) { %> style="white-space:nowrap;"<% }%>>#Q.<%= column.Name %>#</TD>			</cfcase>
 						<% break; %>
 					<% default:	%>
 						<% break; %>
@@ -127,4 +134,6 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 	<% } %>
 <% } %>
+		</cfswitch>
+	</cfloop>
 </cfoutput>

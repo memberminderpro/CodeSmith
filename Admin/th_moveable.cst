@@ -11,7 +11,7 @@
 <!-- #include file="../scripts/CFDefault.cs" -->
 <!-- #include file="../scripts/SplitCamelCase.cs" -->
 public override string GetFileName() {
-	return "TD.cfm";
+	return "TH.cfm";
 }
 </script>
 <% 
@@ -46,15 +46,23 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 } 
 %>
 <!-------------------------------------------------------------------------------------------------
-	<%= strSourceTable %> TD.cfm
----------------------------------------------------------------------------------------------- --->
-
+	<%= strSourceTable %> TH.cfm
+---------------------------------------------------------------------------------------------------->
 <cfoutput>
 <% int n=0; %>
+	<TH width="2%" class="TableHeadC" data-sorter="false">
+		<div class="noprint">
+			<input  type="Checkbox"	name="CheckAll" checked 	class="CheckAll"	id="CheckAll">
+		</div>
+	</TH>
+
+<!--- Moveable columns --->
+	<cfloop index="Column" list="#FieldList#">
+		<cfswitch expression="#Column#">
 <% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 <% n=n+1; %>
 <%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
-	<TD class="TableCellC" valign="top"><font class="small">#Q.<%= column.Name %>#</font></TD>
+			<TH class="TableHeadC" width="25" <!--- data-sorter="false" --->>ID</TH>
 <% } else { %>
 	<%  switch (column.Name.ToLower() )  %>
 	<% { %>
@@ -62,69 +70,31 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "sequence":	%>
 			<% break; %>
 		<% case "isactive":	%>
-	<TD class="TableCellC"><cfif IsActive EQ "Y">	<IMG src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadC" width="50">Active</TH>		</cfcase>
 			<% break; %>
-		<% case "modified_tmstmp":	%>
-	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Modified_By#<BR><CF_DisplayDate Date="#Q.Modified_Tmstmp#"></TD>
+	<% case "modified_tmstmp":	%>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadC sorter-shortDate dateFormat-mmddyy" width="100">Modified</TH>		</cfcase>
 			<% break; %>
 		<% case "modified_by":		%>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadC width="100">Modified By</TH>		</cfcase>
 			<% break; %>
 		<% case "created_tmstmp":	%>
-	<TD class="TableCellL small" style="white-space:nowrap;">#Q.Created_By# <BR><CF_DisplayDate Date="#Q.Created_Tmstmp#"></TD>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadC sorter-shortDate dateFormat-mmddyy" width="100">Created</TH>		</cfcase>
 			<% break; %>
 		<% case "created_by":		%>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadC width="100">Created By</TH>		</cfcase>
 			<% break; %>
 		<% case "accountid":		%>
-			<% break; %>
+		<% case "clubid":		%>
+		<% case "dflag":		%>
 		<% case "orgyear":		%>
 			<% break; %>
 		<% default:%>
-			<% string strColType = column.NativeType;	%>
-			<% switch (strColType)	%>
-				<% {	%>
-					<% case "bit":		%>
-					<% case "bigint":	%>
-					<% case "int":		%>
-					<% case "numeric":	%>
-					<% case "smallint":	%>
-					<% case "tinyint":	%>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
-				<% break; %>
-					<% case "decimal":	%>
-					<% case "float":	%>
-					<% case "money":	%>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
-				<% break; %>
-					<% case "char":		%>
-	<% if ( column.Name.Substring(0, 2) == "Is" ) { %>
-	<TD class="TableCellC"><cfif <%= column.Name %> EQ "Y">		<img src="#SESSION.ApplURL#Images/check.gif"><cfelse>&nbsp;</cfif></td>
-				<% } else { %>
-		<% if ( column.Size == 1 ) { %>
-	<TD class="TableCellC">
-		<cfswitch expression="#Q.<%= column.Name %>#">
-			<cfcase value="N">No	</cfcase>
-			<cfcase value="Y">Yes	</cfcase>
-			<cfdefaultcase>#Q.<%= column.Name %>#</cfdefaultcase>
-		</cfswitch>
-	</TD>
-					<% } else { %>
-	<TD class="TableCellC">#Q.<%= column.Name %>#</td>
-					<% } %>
-				<% } %>
-				<% break; %>
-					<% case "nvarchar":	%>
-					<% case "varchar":	%>
-					<% case "xml":		%>
-					<% case "date":		%>
-					<% case "datetime":	%>
-					<% case "smalldatetime":	%>
-	<TD class="TableCellL"<% if (n==2) { %> style="white-space:nowrap;"<% }%>>#Q.<%= column.Name %>#</TD>
-						<% break; %>
-					<% default:	%>
-						<% break; %>
-				<% } %>
+			<cfcase value="<%= column.Name %>">	<TH class="TableHeadL" width="<%= column.Size %>"<% if (n==2) { %> style="white-space:nowrap;"<% }%>><%= SplitCamelCase(column.Name) %></TH>		</cfcase>
 			<% break; %>
 		<% } %>
 	<% } %>
 <% } %>
+		</cfswitch>
+	</cfloop>
 </cfoutput>

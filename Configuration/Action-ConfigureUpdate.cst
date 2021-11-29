@@ -1,0 +1,80 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="CFC" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "ConfigUpdate.cfm";
+		else
+			return SourceTable.Name + "ConfigUpdate.cfm";
+	}
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+}
+
+%>
+<!-------------------------------------------------------------------------------------------------
+	Copyright(c) 2003-2021 DACdb, LLC..
+	<%=strSourceTable %>ConfigUpdate.cfm - Save the configuration Dialog
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------->	
+<cfsetting showdebugoutput="no">
+<cfinclude template="../../secure.cfm"> 
+<cfinclude template="../../cfscript/profile.cfm">
+
+<cfparam name="System" 			default="FALSE" 				type="string">
+<cfparam name="Account" 		default="FALSE" 				type="string">
+<cfparam name="Reset" 			default="FALSE" 				type="string">
+<cfparam name="Q" 				default="" 						type="string">
+
+<cfif SESSION.DebugLevel GT 0>
+	<cfsavecontent variable="PageData">
+	<cfdump var="#URL#">
+	<cfdump var="#FORM#">
+	</cfsavecontent>
+	<cffile action="WRITE"  file="#ExpandPath(".")#/<%=strSourceTable %>ConfigDialog.html"  output="<%=strSourceTable %>ConfigDialog:<BR>#PageData#<BR>Q=[#Q#]<BR>">
+</cfif>
+
+<!---
+	Set up the defaults if Reset or System or Account
+--->
+<cfif Reset OR Account OR System>
+	<cfset Q = "<%= SourceTable.Columns[1].Name %>,<%= SourceTable.Columns[2].Name %>,<%= SourceTable.Columns[3].Name %>,Modified,Created">
+</cfif>
+
+<cfif System>
+	<!---
+		Update the values: System -- all Accounts and Users
+	--->
+	<cfset rc = SetProfile(0, 0, 0, "<%=strSourceTable %>", "FieldList", Q)>  <!--- Same setting across all the clubs --->
+<cfelseif Account>
+	<!---
+		Update the values: Account (Default in Account)
+	--->
+	<cfset rc = SetProfile(SESSION.AccountID, 0, 0, "<%=strSourceTable %>", "FieldList", Q)>
+<cfelseif Reset>
+	<!---
+		Reset the values: User -- User
+	--->
+	<cfset rc = SetProfile(SESSION.AccountID, 0, SESSION.UserID, "<%=strSourceTable %>", "FieldList", Q)>
+
+<cfelse>
+<!---
+	Update the values: Indivdual-- Account, Club and UserID
+--->
+	<cfset rc = SetProfile(SESSION.AccountID, 0, SESSION.UserID, "<%=strSourceTable %>", "FieldList", Q)>
+</cfif>

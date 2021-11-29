@@ -112,7 +112,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 						<% break; %>
 					<% case "char":		%>
 		<% if ( column.Size == 1 ) { %>
-		<TD class="TableCellC"><input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);"></td>
+		<TD class="TableCellC">
+			<input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);">
+				-- or --
+			<select id="<%= column.Name %>" name="<%= column.Name %>" class="TxtIn">
+				<option value="N" <% if ( CFDefault(column) == "N" ) { %>selected<% } %>>No	</option>
+				<option value="Y" <% if ( CFDefault(column) == "Y" ) { %>selected<% } %>>Yes</option>
+			</select>
+		</td>
 		<% } else { %>
 		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onChange="checkRow('#N#');"  onkeypress="return noEnter(event);" ></TD>
 		<% } %>
@@ -122,14 +129,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 						<% if ( column.Size < 1) { %>
 		<TD class="TableCellL"><textarea name="<%= column.Name %>" rows="2" cols="40" class="TxtIn">#<%= strSourceTable %>.<%= column.Name %>#</textarea></TD>
 						<% } else { %>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= Math.Min(column.Size,20) %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
 						<% } %>
 						<% break; %>
 					<% case "xml":		%>
 					<% case "date":		%>
 					<% case "datetime":	%>
 					<% case "smalldatetime":	%>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="10"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
 						<% break; %>
 					<% default:	%>
 						<% break; %>

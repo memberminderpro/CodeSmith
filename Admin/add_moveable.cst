@@ -59,11 +59,15 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<cfinclude template="TH.cfm">
 	</tr>
 	</THEAD>
+	<cfoutput>
 	<tr class="addrow" >
-		<cfoutput>
 <% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 <%  if (column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") { %>
 		<TD class="TableCellC small" data-sorter="false">new</TD>
+
+		<!--- Moveable columns --->
+		<cfloop index="Column" list="#FieldList#">
+			<cfswitch expression="#Column#">
 <% } else { %>
 	<%  switch (column.Name.ToLower() )  %>
 	<% { %>
@@ -71,7 +75,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "sequence":	%>
 			<% break; %>
 		<% case "isactive":	%>
-		<TD class="TableCellC"><input type="checkbox" 	name="IsActive" 	value="Y"		checked class="TxtInC"></td>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellC"><input type="checkbox" 	name="IsActive" 	value="Y"		checked class="TxtInC"></td>			</cfcase>
 			<% break; %>
 		<% case "modified_tmstmp":	%>
 		<% case "modified_by":		%>
@@ -82,12 +86,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% case "orgyear":		%>
 			<% break; %>
 		<% case "securitylevel":		%>
+		<cfcase value="<%= column.Name %>">
 			<cfinvoke component="\cfc2\UserRoleDAO" method="View" returnvariable="UserRoleQ">  <!--- Maybe move to the top? --->
 			<select name="SecurityLevel" class="TxtIn">
 				<cfloop query="UserRoleQ">
 					<option value="#SecurityLevel#">#SecurityLevel#-#Evaluate(DE(UserRole))#</option>
 				</cfloop>
 			</select>
+					</cfcase>
 			<% break; %>
 		<% default:%>
 			<% string strColType = column.NativeType;	%>
@@ -100,36 +106,36 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 					<% case "smallint":	%>
 					<% case "tinyint":	%>
 					<% if ( column.Name.ToLower() != "positionsort" && column.Name.ToLower() != "sequence") { %>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtInC MinZero" onkeypress="return noEnter(event);" ></TD>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellC"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtInC MinZero" onkeypress="return noEnter(event);" ></TD>			</cfcase>
 						<% } %>
 						<% break; %>
 					<% case "decimal":	%>
 					<% case "money":	%>
-		<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>"		value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellR"><input type="Text"	name="<%= column.Name %>"		value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>			</cfcase>
 						<% break; %>
 					<% case "float":	%>
-				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>,'9,999.9')#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>
+				<TD class="TableCellL"><input type="Text"	name="<%= column.Name %>_#N#"		value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>,'9,999.9')#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="TxtIn"	onChange="checkRow('#N#');"	onkeypress="return noEnter(event);"></td>			</cfcase>
 						<% break; %>
 					<% case "char":		%>
 		<% if ( column.Size == 1 ) { %>
-		<TD class="TableCellC"><input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);"></td>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellC"><input type="checkbox"	name="<%= column.Name %>"		value="Y"	<% if ( CFDefault(column) == "Y" ) { %>checked<% } %> class="TxtIn"	onkeypress="return noEnter(event);"></td>			</cfcase>
 		<% } else { %>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onChange="checkRow('#N#');"  onkeypress="return noEnter(event);" ></TD>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= column.Size %>"	maxlength="<%= column.Size %>"	class="TxtIn" onChange="checkRow('#N#');"  onkeypress="return noEnter(event);" ></TD>			</cfcase>
 		<% } %>
 						<% break; %>
+					<% case "xml":		%>
 					<% case "nvarchar":	%>
 					<% case "varchar":	%>
 						<% if ( column.Size < 1) { %>
-		<TD class="TableCellL"><textarea name="<%= column.Name %>" rows="2" cols="40" class="TxtIn">#<%= strSourceTable %>.<%= column.Name %>#</textarea></TD>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellL"><textarea name="<%= column.Name %>" rows="2" cols="40" class="TxtIn">#<%= strSourceTable %>.<%= column.Name %>#</textarea></TD>			</cfcase>
 						<% } else { %>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= Math.Min(column.Size,20) %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<cfcase value="<%= column.Name %>">	<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="<%= Math.Min(column.Size,50) %>"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>			</cfcase>
 						<% } %>
 						<% break; %>
-					<% case "xml":		%>
 					<% case "date":		%>
 					<% case "datetime":	%>
 					<% case "smalldatetime":	%>
-		<TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="10"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>
+		<cfcase value="<%= column.Name %>"><TD class="TableCellL"><input type="Text" name="<%= column.Name %>"		value="#<%= strSourceTable %>.<%= column.Name %>#"		size="10"	maxlength="<%= column.Size %>"	class="TxtIn" onkeypress="return noEnter(event);" ></TD>			</cfcase>
 						<% break; %>
 					<% default:	%>
 						<% break; %>
@@ -138,8 +144,10 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<% } %>
 	<% } %>
 <% } %>
-		</cfoutput>
+		</cfswitch>
+	</cfloop>
 	</tr>
+	</cfoutput>
 	<cfoutput query="Q">
 		<cfset N = N + 1>
 		<tr id="Q_#Q.<%= SourceTable.Columns[0].Name %>#">

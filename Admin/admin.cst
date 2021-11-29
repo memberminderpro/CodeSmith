@@ -51,16 +51,17 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 } 
 %>
 <!--------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC.
+	Copyright(c) 2003-2021 DACdb, LLC.
 	<%= strSourceTable %>.cfm - 
 
 	Modifications:
 		<%= DateTime.Now.ToShortDateString() %> - Created
 ----------------------------------------------------------------------------------- --->
 <cfsetting showdebugoutput="No">
+<cfinclude template="/secure.cfm">
+<cfinclude template="/cfscript/profile.cfm">
 
 <!---
-<cfinclude template="/cfscript/profile.cfm">
 <div style="margin-left: 200px">
 <cfdump var="#Form#">
 <cfdump var="#URL#">
@@ -87,6 +88,15 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	Setup
 ---------------------------------------------------------------------------------------------------->
 <cfset start_tick	= GetTickCount()>
+
+<!-------------------------------------------------------------------------------------------------
+	Get Profile Values
+---------------------------------------------------------------------------------------------------->
+<cfset FieldList = GetProfile(EventID, 0, SESSION.UserID, "Room", "FieldList")>
+<cfif Len(FieldList) EQ 0>
+	<cfset FieldList = "Room,Title,Location,RoomCnt,Capacity,Modified,Created">
+</cfif>
+<cfset ll = ListLen(FieldList)+3>
 
 <!-------------------------------------------------------------------------------------------------
 	Form Updates
@@ -198,8 +208,12 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 	<cfoutput>
 	<form id="form" name="form" action="Admin.cfm" method="post" onsubmit="return validate_form(this);">
-		<input type="hidden"	name="AccountID"				value="#AccountID#"				id="AccountID">
-		<input type="hidden"	name="ClubID"					value="#ClubID#"				id="ClubID">
+		<input type="hidden"	name="AccountID"			value="#AccountID#"					id="AccountID">
+		<input type="hidden"	name="ClubID"				value="#ClubID#"					id="ClubID">
+
+		<input	type="hidden"	name="RoleID" 				value="#SESSION.RoleID#"			id="RoleID">
+		<input	type="hidden" 	name="AccountLabel"			value="#SESSION.AccountLabel#"		id="Accountlabel">
+		<input	type="hidden" 	name="ClubLabel" 			value="#SESSION.ClubLabel#"			id="Clublabel">
 
 		<!--- Content Header (Page header) and breadcrumb --->
 		<section class="content noprint" style="padding: 8px 0 8px 0;">
@@ -226,20 +240,20 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 
 						<cfswitch expression="#Action#">
 							<cfcase value="V">
-								<button	type="button" class="btn btn-primary btn-sm   pull-right"	id="Delete">Delete</button>
-								<button	type="button" class="btn btn-secondary btn-sm pull-right"	id="Edit">	Edit</button>
-								<button	type="button" class="btn btn-danger btn-sm    pull-right"	id="Add">	Add</button>
+								<button	type="button" class="btn btn-primary btn-sm   pull-right"	id="DelBtn">Delete</button>
+								<button	type="button" class="btn btn-secondary btn-sm pull-right"	id="EditBtn">	Edit</button>
+								<button	type="button" class="btn btn-danger btn-sm    pull-right"	id="AddBtn">	Add</button>
 							</cfcase>
 							<cfcase value="A">
-								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-default btn-sm   pull-right"				id="Cancel">	Cancel</button>
 								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Add"	id="AddRec">	Add</button>
 							</cfcase>
 							<cfcase value="E">
-								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-default btn-sm   pull-right"				id="Cancel">	Cancel</button>
 								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Update"	id="UpdateRec">	Update</button>
 							</cfcase>
 							<cfcase value="D">
-								<button	type="button" class="btn btn-danger btn-sm   pull-right"				id="Cancel">	Cancel</button>
+								<button	type="button" class="btn btn-default btn-sm   pull-right"				id="Cancel">	Cancel</button>
 								<button	type="submit" class="btn btn-success btn-sm  pull-right" Name="Delete"	id="DeleteRec">	Delete</button>
 							</cfcase>
 						</cfswitch>
@@ -285,12 +299,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	Popup DIVs
 ---------------------------------------------------------------------------------------------------->
 <div id="hidecontain">
-	<div id="programwrap" title="Setup">
-		<form class="programform">
-			No setup parameters are defined at this time.
-		</form>
-	</div>	<!--- /programwrap --->
-
+	<div id="ConfigDiv" title="Configuraton Setup" />  <!--- /config --->
 	<div id="<%=strSourceTable %>Div" title="<%=strSourceTable %>">
 	</div>
 </div>	<!--- /hidecontain --->
@@ -344,26 +353,29 @@ function InitializePage() {
 		$('#form').submit();
 	});
 
-	$('#Add').on('click', function() {		
+	$('#AddBtn').on('click', function() {		
+		// var id = $("#").val();
 		// alert("Add");
 		//<%=strSourceTable %>Dialog(0);
-		window.location = 'Admin.cfm?Action=A';
+		window.location = 'Admin.cfm?Action=A&ID='+id;
 	});
 
-	$('#Edit').on('click', function() {		
+	$('#EditBtn').on('click', function() {		
+		// var id = $("#").val();
 		// alert("Edit");
 		//<%=strSourceTable %>Dialog(id);
-		window.location = 'Admin.cfm?Action=E';
+		window.location = 'Admin.cfm?Action=E&ID='+id;
 	});
 
-	$('#Delete').on('click', function() {
+	$('#DelBtm').on('click', function() {
+		// var id = $("#").val();
 		//alert("Delete");
-		window.location = 'Admin.cfm?Action=D';
+		window.location = 'Admin.cfm?Action=D&ID='+id;
 	});
 
 	$('#Cancel').on('click', function() {
-		//alert("Cancel");
-		window.location = 'Admin.cfm?Action=V';
+		// var id = $("#").val();
+		window.location = 'Admin.cfm?Action=V&ID='+id;
 	});
 	
 	RefreshTable();
