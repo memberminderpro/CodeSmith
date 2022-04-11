@@ -30,7 +30,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 } 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC.
+	Copyright(c) 2003-2022 DACdb, LLC.
 	<%=strSourceTable %>Save.cfm
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> - created
@@ -70,9 +70,9 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<% if ( column.Name == "Modified_By") continue; %>
 	<% if ( column.Name == "Modified_Tmstmp") continue; %>
 	<% if ( CFType(column) == "numeric" ) { %>
-<cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="string">
+    <cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="string">
 	<%} else { %>
-<cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="<%= CFInitType(column) %>">
+    <cfparam name="FORM.<%= column.Name %>"			default="<%= cfcInitDefault(column) %>"			type="<%= CFInitType(column) %>">
 	<% } %>
 	<% } %>
 	<cfparam name="FORM.FieldNames"			Default="<%= fieldNames.Substring( 0, fieldNames.Length-1) %>"	type="string">
@@ -129,10 +129,10 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	<!--- 
 		Return JSON structure
 	 --->		
-	<cfoutput><cfoutput>#serializeJSON(returnStruct)#</cfoutput></cfoutput> 
+	<cfoutput>#serializeJSON(returnStruct)#</cfoutput> 
 	<cfsetting enablecfoutputonly="FALSE" />
 	<cfcatch>
-		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<%=strSourceTable %>ID#" Desc="Error deleting <%=strSourceTable %>: #cfcatch.message#">		
+		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<%=strSourceTable %>ID#" Desc="Error saving <%=strSourceTable %>: #cfcatch.message#">		
 		<cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Save.html"  output="<%=strSourceTable %>Save Error:<BR>#cfcatch.message#<br>#cfcatch.detail#">
 		<cfset returnStruct.error   = "#cfcatch.message#<br>#cfcatch.detail#">
 		<cfset returnStruct.success = FALSE>

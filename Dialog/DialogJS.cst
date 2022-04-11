@@ -95,7 +95,7 @@ function <%=strSourceTable %>Dialog (id) {
 			});
 			$( ".Date" ).datepicker({
 				showOn: 'both',
-				buttonImage : '../images/tcal/cal.gif',
+				buttonImage : '/images/tcal/cal.gif',
 				buttonText : 'Click Calendar',
 				changeMonth: true,
 				changeYear: true,

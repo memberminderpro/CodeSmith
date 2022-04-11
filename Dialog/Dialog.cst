@@ -30,7 +30,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 //} 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC.
+	Copyright(c) 2003-2022 DACdb, LLC.
 	<%=strSourceTable %>Dialog.cfm
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> - created
@@ -61,7 +61,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 			<% if ( column.Name == "Modified_By") continue; %>
 			<% if ( column.Name == "Modified_Tmstmp") continue; %>
 			<TR>
-				<TD width="150" class="TDLabel"><% if ( column.AllowDBNull == false) {%><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
+				<TD width="150" class="TDLabel" data-i18n="<%= column.Name %>"><% if ( column.AllowDBNull == false) {%><% } %> <%= SplitCamelCase(column.Name) %>:&nbsp;</TD>
 				<% if ( column.Name.Substring(0,2) == "Is" && column.Size == 1) {%>
 				<TD class="TDData">
 					<select id="<%= column.Name %>" name="<%= column.Name %>" class="<%= InputStyle(column) %>" <% if ( column.AllowDBNull == false) {%> required <% } %>>

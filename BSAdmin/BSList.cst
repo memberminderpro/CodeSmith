@@ -22,9 +22,9 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == "DL") { 
 	 strSourceTable = strSourceTable.Substring(2);
 } 
-%>
+%>C:\inetpub\wwwroot\Rotary\Registrations\Dialog\UserRooms.cfm
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC.
+	Copyright(c) 2003-2022 DACdb, LLC.
 	<%=strSourceTable %>s_Search.cfm
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> $ - created
@@ -105,7 +105,6 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 <div class="tabletitle">
 <%=strSourceTable %> Listing
 </div>
-
 <div class="tablewrapper">
 <!--- <cfoutput>FieldList=#FieldList#<BR></cfoutput> --->
 <table border="0" cellpadding="0" cellspacing="0" class="tablesorter hasStickyHeaders" width="100%">
@@ -132,20 +131,10 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 				<% if ( column.Name == "ClubID") continue; %>
 				<% if (col == 2) { %>
 					<cfcase value="<%= column.Name %>">			<TD ><a href="##" id="#<%=column.Name %>#" class="StandardLink">#<%= column.Name %>#</a></TD>					</cfcase>
-				<% } else if ( column.Name == "Modified_Tmstmp") {%>
-					<cfcase value="Modified">			<TH class="TableHeadL">Modified</TH>					</cfcase>
-					<cfcase value="Modified_Tmstmp">	<TH class="TableHeadL">Modified Tmstmp</TH>					</cfcase>
-				<% } else if ( column.Name == "Modified_By") {%>
-					<cfcase value="Modified_By">		<TH class="TableHeadL">Modified By</TH>					</cfcase>
-				<% } else if ( column.Name == "Created_Tmstmp" ) {%>
-					<cfcase value="Created">			<TH class="TableHeadL">Created</TH>					</cfcase>
-					<cfcase value="Created_Tmstmp>">	<TH class="TableHeadL">Created Tmstmp</TH>					</cfcase>
-				<% } else if ( column.Name == "Created_By" ) {%>
-					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">Created By</TH>					</cfcase>
 				<% } else if (Right(column.Name,2) == "ID") {%>
-					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">#<%= column.Name %>#</TH>									</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL/"><%= SplitCamelCase(column.Name) %></TH>									</cfcase>
 				<% } else if ( column.NativeType == "smalldatetime" || column.NativeType == "datetime") {%>
-					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL">#DateFormat(<%= column.Name %>, SESSION.DateFmt)#</TH>							</cfcase>
+					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"<%= SplitCamelCase(column.Name) %></TH>							</cfcase>
 				<% } else if ( column.Name == "AccountID") {%>
 					<cfcase value="<%= column.Name %>">			<TH class="TableHeadC"><cfoutput>#SESSION.AccountLabel#</cfoutput></TH>			</cfcase>
 				<% } else if ( column.Name == "ClubID") {%>
@@ -166,7 +155,13 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 					<cfcase value="<%= column.Name %>">			<TH class="TableHeadL"><%= SplitCamelCase(column.Name) %></TH>					</cfcase>
 				<% } %>
 			<% } %>
-					<cfdefaultcase>						<TH >#Column#</TH>					</cfdefaultcase>
+					<cfcase value="Created">			<TH class="TableHeadC">Created</TH>						</cfcase>
+					<cfcase value="CreatedBy">			<TH class="TableHeadC">Created_ By</TH>					</cfcase>
+					<cfcase value="CreatedTmstmp">		<TH class="TableHeadC">Created_ Tmstmp</TH>				</cfcase>
+					<cfcase value="Modified">			<TH class="TableHeadC">Modified</TH>					</cfcase>
+					<cfcase value="ModifiedBy">			<TH class="TableHeadC">Modified_ By</TH>				</cfcase>
+					<cfcase value="ModifiedTmstmp">		<TH class="TableHeadC">Modified_ Tmstmp</TH>			</cfcase>
+                    <cfdefaultcase>						<TH class="TableHeadC"><span class="alert"><cfoutput>#Column#</cfoutput></span></TH>		</cfdefaultcase>
 				</cfswitch>
 			</cfloop>
 		</TR>
@@ -250,7 +245,13 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 					<cfcase value="<%= column.Name %>">		<TD >#<%= column.Name %>#</TD>				</cfcase>
 				<% } %>
 			<% } %>
-					<cfdefaultcase>						<TD >#Column#</td>																			</cfdefaultcase>
+					<cfcase value="Created">			<TD class="TableCellC small sorter-shortDate dateFormat-mmddyy">#DateFormat(Created_tmstmp,SESSION.DateFmt)# #TimeFormat(Created_Tmstmp,"hh:mm tt")#<br>#Created_By#</TD>	</cfcase>
+					<cfcase value="CreatedBy">			<TD class="TableCellL small">#Created_By#</TD>																							</cfcase>
+					<cfcase value="CreatedTmstmp">		<TD class="TableCellL small sorter-shortDate dateFormat-mmddyy">#DateFormat(Created_tmstmp,'mm/dd/yyyy')# #TimeFormat(Created_Tmstmp,"hh:mm tt")#</TD>			</cfcase>
+					<cfcase value="Modified">			<TD class="TableCellL small sorter-shortDate dateFormat-mmddyy">#DateFormat(Modified_tmstmp,SESSION.DateFmt)# #TimeFormat(Modified_Tmstmp,"hh:mm tt")#<br>#Modified_By#</TD></cfcase>
+					<cfcase value="ModifiedBy">			<TD class="TableCellL small">#Modified_By#</TD>																							</cfcase>
+					<cfcase value="ModifiedTmstmp">		<TD class="TableCellL small sorter-shortDate dateFormat-mmddyy">#DateFormat(Modified_tmstmp,'mm/dd/yyyy')# #TimeFormat(Modified_Tmstmp,"hh:mm tt")#</TD>					</cfcase>
+					<cfdefaultcase>						<TD class="TableCellC"><span class="alert">#Column#</span></td>																					</cfdefaultcase>
 				</cfswitch>
 			</cfloop>
 		</TR>

@@ -10,9 +10,9 @@
 <!-- #include file="../scripts/SplitCamelCase.cs" -->
 	public override string GetFileName() {
 		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
-			return SourceTable.Name.Substring(3) + "Dialog.cfc";
+			return SourceTable.Name.Substring(3) + "Dialog.cfm";
 		else
-			return SourceTable.Name + "DAO.cfc";
+			return SourceTable.Name + "DAO.cfm";
 	}
 </script>
 <% 
@@ -92,7 +92,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtInC"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input id="<%= column.Name %>" type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtInC"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 					<% } %>
@@ -102,7 +102,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input id="<%= column.Name %>" type="Text"	name="<%= column.Name %>"	value="#DecimalFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 						<% break; %>
@@ -110,7 +110,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input id="<%= column.Name %>"    type="Text"	name="<%= column.Name %>"	value="#NumberFormat(<%= strSourceTable %>.<%= column.Name %>)#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 						<% break; %>
@@ -119,7 +119,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="checkbox"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	<cfif <%= strSourceTable %>.<%= column.Name %> EQ "Y"> checked </cfif>  class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input  id="<%= column.Name %>" type="checkbox"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	<cfif <%= strSourceTable %>.<%= column.Name %> EQ "Y"> checked </cfif>  class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 					<% } else { %>
@@ -127,14 +127,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input  id="<%= column.Name %>"type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 					<% } else { %>
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input  id="<%= column.Name %>" type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 							<% } %>
@@ -146,14 +146,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<textarea	name="<%= column.Name %>" rows="2"	cols="40"	class="TxtIn" placeholder="<%= SplitCamelCase(column.Name)%>" id="<%= column.Name %>">#Trim(<%= strSourceTable %>.<%= column.Name %>)#</textarea>
+			<textarea  id="<%= column.Name %>"    name="<%= column.Name %>" rows="2"	cols="40"	class="TxtIn" placeholder="<%= SplitCamelCase(column.Name)%>" data-i18n="<%= column.Name %>">#Trim(<%= strSourceTable %>.<%= column.Name %>)#</textarea>
 		</div>
 	</div>
 						<% } else { %>
 	<div class="form-group row">
 		<label for="<%= column.Name %>" class="col-sm-2 col-form-label"><%= SplitCamelCase(column.Name)%>: </label>
 		<div class="col-sm-5">
-			<input type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	id="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
+			<input id="<%= column.Name %>" type="Text"	name="<%= column.Name %>"	value="#<%= strSourceTable %>.<%= column.Name %>#"	size="<%= column.Size %>"	maxlength="<%= column.Size %>"   class="form-control TxtIn"	data-i18n="<%= column.Name %>" placeholder="<%= SplitCamelCase(column.Name)%>" required>
 		</div>
 	</div>
 						<% } %>

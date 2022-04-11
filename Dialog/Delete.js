@@ -14,9 +14,9 @@
 		}
 		$.ajax({ 
 			type: "POST",
-			url: "Action/MemberPrevClubDelete.cfm",
+			url: "Action/RoomUserDelete.cfm",
 			data: {
-				id: id
+				RoomUserID: id
 			},
 		  	success: function(data) {  
 				var obj = $.parseJSON(data);

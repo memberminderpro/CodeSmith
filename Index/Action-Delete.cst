@@ -31,7 +31,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 } 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC. 
+	Copyright(c) 2003-2022 DACdb, LLC. 
 	<%=strSourceTable %>Delete.cfm - Delete <%=strSourceTable %>
 
 	Modifications

@@ -22,22 +22,13 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 }
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2018 DACdb, LLC.
+	Copyright(c) 2003-2022 DACdb, LLC.
 	<%=strSourceTable %>.cfm - Menu
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> $ - created
 ---------------------------------------------------------------------------------------------------->	
-<cfinclude template="../secure.cfm"> 
+<cfinclude template="/secure.cfm"> 
 <cfsetting showdebugoutput="no">
-
-<cfinclude template="../secure.cfm">
-
-<link rel="stylesheet" href="../CSS/Font-Awesome/css/font-awesome.min.css">
-<link rel="stylesheet" type="text/css" 	href="../jQuery/SideMenu/sidebar-menu.css?"+Math.random() />
-<script type="text/javascript" src="../jQuery/SideMenu/sidebar-menu.js"></script>
-
-<cfset Referrer = GetFileFromPath(CGI.HTTP_URL)>							 <!--- Who called --->
-<cfset FileName = ListDeleteAt(Referrer, ListLen(Referrer, "."), ".")>		 <!--- File Name without EXT  --->
 
 <cfoutput>
 <section style="width: 200px" class="noprint">
@@ -55,8 +46,4 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 	</ul>
 </section>
 
-<script>
-$.sidebarMenu($('.sidebar-menu'));
-$("###FileName#").addClass('active');
-</script>
 </cfoutput>

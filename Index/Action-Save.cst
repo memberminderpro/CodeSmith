@@ -25,7 +25,7 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2003-2020 DACdb, LLC. 
+	Copyright(c) 2003-2022 DACdb, LLC. 
 	<%=strSourceTable %>Save.cfm - Save <%=strSourceTable %>
 	Modifications
 		<%= DateTime.Now.ToShortDateString() %> - created
@@ -37,6 +37,8 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 			<% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
 				<%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,
 		<% } %>
+
+    <cfset FieldNames = "<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].Name == "Modified_By") continue; %><% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %><%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,<% } %>">
 --%>
 ---------------------------------------------------------------------------------------------------->	
 <cfsetting showdebugoutput="no">
@@ -107,8 +109,8 @@ if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") {
 			<cfinvokeargument name="#theField#"			Value="#Form[theField]#">
 		</cfloop>
 
-	<cfset FieldNames = "<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %><% if (SourceTable.Columns[i].Name == "Modified_By") continue; %><% if (SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %><%= SourceTable.Columns[i].Name %><% if (i < (SourceTable.Columns.Count-3)) %>,<% } %>">
-
+--- OR ---
+    
 	<% foreach (ColumnSchema column in this.SourceTable.Columns) {  %>
 		<% if ( column.ExtendedProperties.Contains("CS_IsComputed") && column.ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue;  %>
 		<% if ( column.ExtendedProperties.Contains("CS_IsIdentity") && column.ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>   

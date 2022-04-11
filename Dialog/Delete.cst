@@ -31,7 +31,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 } 
 %>
 <!-------------------------------------------------------------------------------------------------
-	Copyright(c) 2010-2013 Infusion Group, LLC. 
+	Copyright(c) 2010-2022 DACdb, LLC. 
 	<%=strSourceTable %>Delete.cfm - Delete <%=strSourceTable %>
 
 	Modifications
@@ -70,7 +70,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 	<!--- 
 		Return JSON structure
 	 --->		
-	<cfoutput><cfoutput>#serializeJSON(returnStruct)#</cfoutput></cfoutput> 
+	<cfoutput>#serializeJSON(returnStruct)#</cfoutput> 
 	<cfsetting enablecfoutputonly="FALSE" />
 	<cfcatch>
 		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<%=strSourceTable %>ID#" Desc="Error deleting <%=strSourceTable %>: #cfcatch.message#">		
