@@ -41,7 +41,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 <cfsetting enablecfoutputonly	= "TRUE" /> 
 <cfsetting showdebugoutput		= "No">
 
-<cfset fDebug = TRUE>
+<cfset fDebug = FALSE>
 <cfif fDebug>
 	<cfsavecontent variable="PageData">
 	<cfdump var="#Form#">
@@ -50,7 +50,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 </cfif>
 
 <cftry>
-	<cfparam name="<%=strSourceTable %>ID" 					default="0" 		type="numeric"> 
+	<cfparam name="<% =SourceTable.Columns[0].Name %>"					default="0" 		type="numeric"> 
  
  	<cfset returnStruct 		= structNew() />
 	<cfset returnStruct.success = TRUE />
@@ -59,7 +59,7 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 	<!---  
 		Read in current values -- initialize defaults
 	--->
-	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <%=strSourceTable %>ID="#<%=strSourceTable %>ID#" ) />
+	<cfset <%=strSourceTable %>Obj = createObject("component", "\CFC\<%=strSourceTable %>").init( <% =SourceTable.Columns[0].Name %>="#<% =SourceTable.Columns[0].Name %>#" ) />
 	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Read"   <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="<%=strSourceTable %>">
 	<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="Delete" <%=strSourceTable %>="#<%=strSourceTable %>Obj#" returnvariable="RC">
 	<cfif NOT RC>
@@ -73,10 +73,10 @@ if (strSourceTable.Substring(0, 2) == "GL" || strSourceTable.Substring(0, 2) == 
 	<cfoutput>#serializeJSON(returnStruct)#</cfoutput> 
 	<cfsetting enablecfoutputonly="FALSE" />
 	<cfcatch>
-		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<%=strSourceTable %>ID#" Desc="Error deleting <%=strSourceTable %>: #cfcatch.message#">		
+		<CF_XLog table="<%=strSourceTable %>" type="E" Value="#<% =SourceTable.Columns[0].Name %>#" Desc="Error deleting <%=strSourceTable %>: #cfcatch.message#">		
 		<cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Delete.html"  output="<%=strSourceTable %>Delete Error:<BR>#cfcatch.message#<br>#cfcatch.detail#">
 		<cfset returnStruct.error   = "#cfcatch.message#<br>#cfcatch.detail#">
 		<cfset returnStruct.success = FALSE>
-		<cfoutput><cfoutput>#serializeJSON(returnStruct)#</cfoutput></cfoutput> 
+		<cfoutput>#serializeJSON(returnStruct)#</cfoutput>
 	</cfcatch>
 </cftry>

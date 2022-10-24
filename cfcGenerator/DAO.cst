@@ -19,6 +19,7 @@
 </script>
 <% 
 bool fAccountID = false;
+bool fClubID = false;
 bool fdFlag 	= false;
 bool fIsActive 	= false;
 bool fOrgYear 	= false;
@@ -40,6 +41,9 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	if (column.Name == "AccountID") { 
 		fAccountID = true;
 	}
+	if (column.Name == "ClubID") { 
+		fClubID = true;
+	}
 	if (column.Name == "dFlag") { 
 		fdFlag = true;
 	} 
@@ -60,8 +64,8 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 <!--------------------------------------------------------------------------------------------
 	<%= strSourceTable %>DAO.cfc
 
-	* $Revision: $
-	* $Date: <%= DateTime.Now.ToShortDateString() %> $
+	Modifications
+		$Date: <%= DateTime.Now.ToShortDateString() %> $
 ---------------------------------------------------------------------------------------------->
 
 <cfcomponent displayname="<%= strSourceTable %>DAO" output="false">
@@ -121,9 +125,14 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 ---------------------------------------------------------------------------------------------------------------------->
 	<cffunction name="Pick" access="public" output="false" returntype="Query" DisplayName="Pick">
 		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
-		<cfargument Name="AccountID"		Type="Numeric"  	Required="No" 	Hint="AccountID"			Default="#SESSION.AccountID#">
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
+		<% } %>
 		<% if (fIsActive || fdFlag) { %>
-		<cfargument Name="Override"		Type="String"  		Required="No" 	Hint="Override" 			Default="N">
+		<cfargument Name="Override"			Type="String"  		Required="No" 	Hint="Override" 			Default="N">
 		<% } %>
 		<cfargument Name="SortBy"			Type="String"  		Required="No" 	Hint="SortBy" 				Default="<%= SourceTable.Columns[1].Name %>">
 
@@ -162,6 +171,9 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
 		<% if (fAccountID) { %>
 		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
 		<% } %>
 		<% if (fIsActive || fdFlag) { %>
 		<cfargument Name="Override"				Type="String"	Required="No" 	Hint="Override"			Default="N">
@@ -214,6 +226,9 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
 		<% if (fAccountID) { %>
 		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
 		<% } %>
 		<% if (fIsActive || fdFlag) { %>
 		<cfargument Name="Override"				Type="String"	Required="No"	Hint="Override"			Default="N">
@@ -281,7 +296,10 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 	<cffunction name="List" access="public" output="false" returntype="Query" DisplayName="List">
 		<cfargument name="<% =SourceTable.Columns[0].Name %>"<%= CFTabName( SourceTable.Columns[0].Name ) %>Type="<%= CFType(SourceTable.Columns[0]) %>"	Required="No"	Hint="<% =SourceTable.Columns[0].Name %>"			Default="0" />
 		<% if (fAccountID) { %>
-		<cfargument Name="AccountID"			Type="Numeric"	Required="No" 	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<cfargument Name="AccountID"			Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
 		<% } %>
 		<% if (fIsActive || fdFlag) { %>
 		<cfargument Name="Override"				Type="String"	Required="No" 	Hint="Override"			Default="N">
@@ -651,7 +669,7 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			<CF_XLog Table="<%=strSourceTable %>" type="U" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="<%=strSourceTable %> #ARGUMENTS.<%= strSourceTable %>.get<%=SourceTable.Columns[1].Name %>()# Updated">
 			<cfcatch type="database">
 				<cfif ARGUMENTS.OnErrorContinue EQ "N">
-					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="0" Desc="Error updating <%=strSourceTable %> (#cfcatch.detail#)" >
+					<CF_XLog Table="<%=strSourceTable %>" type="E" Value="#<%= SourceTable.Columns[0].Name %>#" Desc="Error updating <%=strSourceTable %> (#cfcatch.detail#)" >
 				</cfif>
 				<cfreturn 0 />
 			</cfcatch>
@@ -780,6 +798,58 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 				<% if (SourceTable.Columns[i].Name == "Created_Tmstmp") continue; %>
 				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
 				<% if ( SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<% if ( SourceTable.Columns[i].Name == "AccountID") { %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#SESSION.<%= SourceTable.Columns[i].Name %>#" />
+					<% continue; %>
+				<% } %>
+				<% if ( SourceTable.Columns[i].Name == "ClubID") { %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#SESSION.<%= SourceTable.Columns[i].Name %>#" />
+					<% continue; %>
+				<% } %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#Q.<%= SourceTable.Columns[i].Name %>#" />
+			<% } %>
+			</cfinvoke>
+			<cfset CloneID = Create( <%=strSourceTable %>Obj, "Y" ) />
+		</cfloop>
+		<cfreturn TRUE />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	LoadBase -  <%= strSourceTable %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="LoadBase" access="public" output="false" returntype="boolean" DisplayName="LoadBase <%= strSourceTable %>">
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"		Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
+		<% } %>
+
+		<cfset var Q 	 = "" />
+		<cfset var <%= strSourceTable %>Obj = "" />
+		<cfset var CloneID = "" />
+
+		<cfset Q = Lookup( AccountID=0, ClubID=0) />
+
+		<cfloop query="Q">
+			<cfinvoke component="<%= strSourceTable %>" method="init" returnvariable="<%= strSourceTable %>Obj">
+			<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsComputed") && SourceTable.Columns[i].ExtendedProperties["CS_IsComputed"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].ExtendedProperties.Contains("CS_IsIdentity") && SourceTable.Columns[i].ExtendedProperties["CS_IsIdentity"].Value.ToString().ToLower() == "true") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_By") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Created_Tmstmp") continue; %>
+				<% if (SourceTable.Columns[i].Name == "Modified_By") continue; %>
+				<% if ( SourceTable.Columns[i].Name == "Modified_Tmstmp") continue; %>
+				<% if ( SourceTable.Columns[i].Name == "AccountID") { %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#SESSION.<%= SourceTable.Columns[i].Name %>#" />
+					<% continue; %>
+				<% } %>
+				<% if ( SourceTable.Columns[i].Name == "ClubID") { %>
+				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#SESSION.<%= SourceTable.Columns[i].Name %>#" />
+					<% continue; %>
+				<% } %>
 				<cfinvokeargument name="<%= SourceTable.Columns[i].Name %>"<%= CFTabClone(SourceTable.Columns[i].Name) %>Value="#Q.<%= SourceTable.Columns[i].Name %>#" />
 			<% } %>
 			</cfinvoke>
@@ -817,6 +887,30 @@ foreach (ColumnSchema column in this.SourceTable.Columns) {
 			</cfcatch>
 		</cftry>
 		<cfreturn  TRUE />
+	</cffunction>
+
+<!--- ----------------------------------------------------------------------------------------------------------------
+	Count - <%= SourceTable.Name %>
+	Modifications
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------------------------------------------------------------->
+	<cffunction name="Count" access="public" output="false" returntype="Numeric" DisplayName="Count">
+		<% if (fAccountID) { %>
+		<cfargument Name="AccountID"		Type="Numeric"	Required="No"	Hint="AccountID"		Default="#SESSION.AccountID#">
+		<% } %>
+		<% if (fClubID) { %>
+		<cfargument Name="ClubID"			Type="Numeric"	Required="No"	Hint="ClubID"		Default="#SESSION.ClubID#">
+		<% } %>
+
+		<cfset var qCount = "" />
+		<cfquery name="qCount" datasource="#VARIABLES.dsn#">
+			SELECT	Count(*) As Cnt
+			FROM	<%= SourceTable.Name %>
+			WHERE	1 = 1
+			AND		<%= SourceTable.Name %>.AccountID	= <CFQUERYPARAM Value="#ARGUMENTS.AccountID#" 	CFSQLTYPE="CF_SQL_INTEGER">
+			AND		<%= SourceTable.Name %>.ClubID		= <CFQUERYPARAM Value="#ARGUMENTS.ClubID#"		CFSQLTYPE="CF_SQL_INTEGER">
+		</cfquery>
+		<cfreturn qCount.Cnt>
 	</cffunction>
 
 <!--- ----------------------------------------------------------------------------------------------------------------
