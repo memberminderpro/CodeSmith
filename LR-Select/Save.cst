@@ -1,0 +1,72 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + "Save.cfm";
+		else
+			return SourceTable.Name + "Save.cfm";
+	}
+</script>
+<% 
+string strCode = "T";								// Set this when multi-selects are used
+
+	string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------
+	Copyright(c) 2003-22 DACdb, LLC.
+	<%=strSourceTable %>.cfm - <%=strSourceTable %> Select Save
+
+	Modifications:
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------->
+<cfinclude template="/secure.cfm">
+<cfsetting showdebugoutput="No">
+
+	<cfparam name="FORM.Osel<%=strCode %>"			default=""							type="String">
+	<cfparam name="FORM.Bsel<%=strCode %>"			default=""							type="String">
+
+
+	<!---
+		Update <%= SplitCamelCase(strSourceTable) %>
+	--->
+	<cfif IsDefined("FORM.Osel<%=strCode %>")>  <!--- If this is not defined, the moderators where never loaded --->
+		<cfif IsDefined("FORM.Bsel<%=strCode %>")>  <!--- This is needed incase there are no members assigned. --->
+			<cfloop index="UserID" list="#FORM.Bsel<%=strCode %>#">  <!--- 	Insert new members not on original list --->
+				<cfif ListFind(#FORM.Osel<%=strCode %>#, UserID) EQ 0>  <!--- New member for on original team list --->
+					<cfif fDebug><cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Save.html"  output="- UserID:#UserID# Moderator Added<BR>"></cfif>
+					<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="insertRec" returnvariable="OK">
+						<cfinvokeargument name="AccountID"		Value="#SESSION.AccountID#">
+						<cfinvokeargument name="EventID"		Value="#EventID#">
+						<cfinvokeargument name="UserID"			Value="#UserID#">
+					</cfinvoke>
+				</cfif>
+			</cfloop>
+			<cfloop index="UserID" list="#FORM.Osel<%=strCode %>#">  <!--- 	Delete original members not on new list --->
+				<cfif ListFind(#FORM.Bsel<%=strCode %>#, UserID) EQ 0>  <!--- member not on new team --->
+					<cfif fDebug><cffile action="APPEND"  file="#ExpandPath(".")#/<%=strSourceTable %>Save.html"  output="- UserID:#UserID# Moderator deleted<BR>"></cfif>
+					<cfinvoke component="\CFC\<%=strSourceTable %>DAO" method="deleteRec"  returnvariable="OK">
+						<cfinvokeargument name="EventID"		Value="#EventID#">
+						<cfinvokeargument name="UserID"			Value="#UserID#">
+					</cfinvoke>
+				</cfif>
+			</cfloop>
+		</cfif>
+	</cfif>

@@ -1,0 +1,54 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + ".cfm";
+		else
+			return SourceTable.Name + ".cfm";
+	}
+</script>
+<% 
+string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!--------------------------------------------------------------------------------------------
+ 	Copyright(c) 2003-2022 DACdb, LLC.
+	<%=strSourceTable %>.cfm - <%=strSourceTable %> Select
+
+	Modifications:
+		<%= DateTime.Now.ToShortDateString() %> - created
+----------------------------------------------------------------------------------------------->
+<cfinclude template="/secure.cfm">
+<cfsetting showdebugoutput="no">
+
+<cftry>
+	<cfparam name="<%= SourceTable.Columns[0].Name %>" 				default="0"					type="numeric">
+
+	<P>To configure the <%=strSourceTable %>, select from the members on the left and move them to the right side using the >> arrows.  To remove a Moderator,
+	user the << or << ALL buttons.
+	</P>
+
+	<div id="<%=strSourceTable %>Wrap">
+		<img src="/images/loading2.gif">
+	</div>
+	<cfcatch>
+		<cfoutput>#cfcatch.message#</cfoutput><cfabort>
+	</cfcatch>
+</cftry>

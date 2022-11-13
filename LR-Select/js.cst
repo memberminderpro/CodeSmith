@@ -1,0 +1,106 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/cfcInitDefault.cs" -->
+	<!-- #include file="../scripts/Required.cs" -->
+	<!-- #include file="../scripts/CFPropertyType.cs" -->
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/CFInitType.cs" -->
+	<!-- #include file="../scripts/CFTabs.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + ".cfc";
+		else
+			return SourceTable.Name + ".cfc";
+	}
+</script>
+<% 
+string strCode = "C";								// Set this when multi-selects are used
+
+	string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 7 && strSourceTable.Substring(0, 7) == "tblUser") { 
+	 strSourceTable = "Member";
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "RLI") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+
+
+} 
+%>
+
+
+function refresh<%=strSourceTable %>() {
+	// alert("refresh<%=strSourceTable %>");
+	$("#<%=strSourceTable %>Wrap").html('<img src="/images/loading2.gif">');
+
+	$.ajax({
+	  	type: "POST",
+	  	url: "Action/Get<%=strSourceTable %>.cfm",
+		data: {
+			UserID: $("#UserID").val()
+		},
+	  	success: function(data) {
+	  		$("#<%=strSourceTable %>Wrap").html( data );
+
+			$('#PMail<%=strSourceTable %>').on('click', function() {
+				var mids = [];
+				$("#UserIDs").val ( "" );
+				$("#<%=strSourceTable %>Wrap .<%=strSourceTable %>UserIDs:checkbox:checked").each(function() {
+					mids.push( $(this).val() );
+				});
+				if (mids.length >= 1) {
+					$("#UserIDs").val ( mids );
+					$('#form').attr('action', '/PMail2/index.cfm');
+					$('#Type').val('UserIDs');
+					$('#form').submit();
+				}
+				else { alert("No members selected"); }
+			});
+
+			$( "#CheckAllMods" ).on("change", function() {
+				if (this.checked)
+					$(".subinnercontentwrapper").children().find("input").attr('checked','checked');
+				else
+					$(".subinnercontentwrapper").children().find("input").removeAttr('checked');
+			});
+
+			$("#selectbtn<%=strCode %>").click(function(e) {
+				var selectedlist = $("#Bnotsel<%=strCode %>").val();
+				for (var i = 0; i < selectedlist.length; i++) {
+					$("#Bsel<%=strCode %>").append( $("#<%=strCode %>User"+selectedlist[i]) ); 
+				}
+				SortSelectBox<%=strCode %>();
+			});
+
+			$("#removebtn<%=strCode %>").click(function(e) {
+				var selectedlist = $("#Bsel<%=strCode %>").val();
+				for (var j = 0; j < selectedlist.length; j++) {
+					$("#Bnotsel<%=strCode %>").append( $("#<%=strCode %>User"+selectedlist[j]) );
+				}
+				SortSelectBox<%=strCode %>();
+			});
+
+			$("#removeallbtn<%=strCode %>").click(function(e) {
+				$("#Bnotsel<%=strCode %>").append( $("#Bsel<%=strCode %>").children() );
+				SortSelectBox<%=strCode %>();
+			});
+		}
+	});
+}
+
+function SortSelectBox<%=strCode %>() {
+	function NASort(a, b) {
+		return (a.innerHTML > b.innerHTML) ? 1 : -1;
+	}
+	$('#Bsel<%=strCode %> option').sort(NASort).appendTo('#Bsel<%=strCode %>');
+	$('#Bnotsel<%=strCode %> option').sort(NASort).appendTo('#Bnotsel<%=strCode %>');
+}

@@ -1,0 +1,134 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="Coldfusion" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the object is based on." %>
+<%@ Map Name="CSharpAlias" Src="System-CSharpAlias" Description="System to C# Type Map" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+	<!-- #include file="../scripts/CFType.cs" -->
+	<!-- #include file="../scripts/SQLType.cs" -->
+	<!-- #include file="../scripts/InputStyle.cs" -->
+	<!-- #include file="../scripts/InputSize.cs" -->
+	<!-- #include file="../scripts/InputJS.cs" -->
+	<!-- #include file="../scripts/InputValue.cs" -->
+	<!-- #include file="../scripts/SplitCamelCase.cs" -->
+	public override string GetFileName() {
+		if (SourceTable.Name.Length > 3 && SourceTable.Name.Substring(0, 3) == "tbl") 
+			return SourceTable.Name.Substring(3) + ".cfm";
+		else
+			return SourceTable.Name + ".cfm";
+	}
+</script>
+<% 
+string strCode = "C";								// Set this when multi-selects are used
+
+	string strSourceTable = SourceTable.Name;
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "tbl") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+if (strSourceTable.Length > 3 && strSourceTable.Substring(0, 3) == "GL_") { 
+	 strSourceTable = strSourceTable.Substring(3);
+} 
+%>
+<!-------------------------------------------------------------
+	Copyright(c) 2003-22 DACdb, LLC.
+	<%=strSourceTable %>.cfm - <%=strSourceTable %> Select
+
+	Modifications:
+		<%= DateTime.Now.ToShortDateString() %> - created
+---------------------------------------------------------------->
+<cfinclude template="/secure.cfm">
+<cfsetting showdebugoutput="No">
+
+<cftry>
+	<cfparam name="UserID" 				default="0"					type="numeric">
+	<cfcatch>Contact Support.<cfabort></cfcatch>
+</cftry>
+
+<cfinvoke component="\CFC\Member" method="LOOKUP_MemberByGTERoleID" UserRoleID="1" returnvariable="AMQ">
+
+<cfinvoke component="\CFC\<%=strSourceTable %>DAO"	method="Lookup" EventID="#EventID#" returnvariable="<%=strSourceTable %>Q">
+<cfset PTKeys  = ValueList(<%=strSourceTable %>Q.UserID)>
+
+<P>Select from the members on the left and move them to the right box using the <strong> >> </strong> arrows.<BR>
+ To remove a member as a moderator, select them on the right and use the <strong> << </strong> arrows to move to the left box.
+</P>
+
+<cfoutput>
+<input type="hidden" name="Osel<%=strCode %>" 		value="#PTKeys#">
+
+<div class="tabletitle">
+	Selected <%= SplitCamelCase(strSourceTable) %> Information
+</div>
+<div class="tablewrapper">
+<table border="0" cellpadding="0" cellspacing="0" class="tablesorter" width="100%">
+	<THEAD>
+	<TR>
+		<TH class="TableHeadC" data-sorter="false" width="2%"><input id="CheckAllMods" type="Checkbox" name="eChkCtrl" checked></TH>
+		<TH class="TableHeadL">Member Name</TH>
+		<TH class="TableHeadL">#SESSION.ClubLabel# Name</TH>
+		<TH class="TableHeadC"><cfoutput>#SESSION.AccountLabel#</cfoutput></TH>
+		<TH class="TableHeadL">Home Phone</TH>
+		<TH class="TableHeadL">Office Phone</TH>
+		<TH class="TableHeadL">Cell Phone</TH>
+		<TH class="TableHeadL">Email</TH>
+	</tr>
+	</THEAD>
+	<TBODY>
+	<cfloop query="<%=strSourceTable %>Q">
+		<TR <cfif dFlag EQ "Y"> class="delrow"  <cfelse> <cfif (currentrow MOD 2) IS 0> class="grayrow" </cfif></cfif> style="height: 25px">
+			<TD class="TableCellC data-sorter="false""><input type="Checkbox" 	name="<%=strSourceTable %>ID" 	value="#UserID#" checked class="<%=strSourceTable %>UserIDs checkbox"></TD>
+			<TD class="TableCellL">#UserName#</TD>
+			<TD class="TableCellL">#ClubName#</TD>
+			<TD class="TableCellC">#AccountID#</TD>
+			<TD class="TableCellL">#HomePhone#</TD>
+			<TD class="TableCellL">#OfficePhone#</TD>
+			<TD class="TableCellL">#CellPhone#</TD>
+			<TD class="TableCellL">#Email#</TD>
+		</TR>
+	</cfloop>
+	</TBODY>
+</table>
+</div>
+
+<BR>
+<table border="0" cellspacing="0" cellpadding="0" height="100%" style="max-width: 1000px;">
+	<tr>
+		<td width="46%" align="left" valign="top" height="100%">
+			<div class="TableHeadL" align="left" valign="middle" style="height:30px;">
+				Available <%= SplitCamelCase(strSourceTable) %>:
+			</div>
+			<select id="BnotselM" name="BnotselM" size="10" multiple style="width:100%; border:1px solid gainsboro; min-height:260px; max-height:260px;">
+				<cfloop query="AMQ">
+					<cfif ListFind(PTKeys, UserID) EQ 0 >
+						<option id="<%=strCode %>User#AMQ.UserID#" value="#UserID#">#UserName# &nbsp;<cfif ClubID GT 0><span class="small">(D#AccountID#-#ClubName#)</span></cfif></option>
+					</cfif>
+				</cfloop>
+			</select>
+		</td>
+
+		<td width="8%" align="center" valign="middle">
+			<div class="buttonpadding">
+				<input type="button"	name="selectbtn"	id="selectbtn<%=strCode %>"		 value=">>" title="Select" style="width:80%;">
+			</div>
+			<div class="buttonpadding">
+				<input type="button"	name="removebtn"	id="removebtn<%=strCode %>"		value="<<" title="Remove" style="margin-top:10px; width:80%;">
+			</div>
+			<div class="buttonpadding">
+				<input type="button"	name="removeallbtn"	id="removeallbtn<%=strCode %>"	value="<< All" title="Remove All" style="margin-top:10px; width:80%;">
+			</div>
+		</td>
+
+		<td width="46%" align="right" valign="top">
+			<div class="TableHeadL" align="left" valign="middle" style="height:30px;">
+				Selected <%= SplitCamelCase(strSourceTable) %>
+			</div>
+			<select id="BselM" name="BselM" size="12" multiple style="width:100%; border:1px solid gainsboro; min-height:260px; max-height:260px;">
+				<cfloop query="<%=strSourceTable %>Q">
+					<option id="<%=strCode %>User#<%=strSourceTable %>Q.UserID#" value="#UserID#">#UserName# &nbsp;<cfif ClubID GT 0><span class="small">(D#AccountID#-#ClubName#)</span></cfif></option>
+				</cfloop>
+			</select>
+		</td>
+	</tr>
+</table>
+</cfoutput>
